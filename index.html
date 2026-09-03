@@ -935,6 +935,28 @@
                 if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
                 if (!db.identidad) db.identidad = { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" };
             }
+
+            fetch('./respaldo_gastro_YYYY-MM-DD.json?ts=' + Date.now(), { cache: 'no-store' })
+                .then(response => {
+                    if (!response.ok) throw new Error('No se pudo cargar respaldo_gastro_YYYY-MM-DD.json');
+                    return response.json();
+                })
+                .then(jsonData => {
+                    if (jsonData && typeof jsonData === 'object') {
+                        db = {
+                            identidad: jsonData.identidad || { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" },
+                            insumos: Array.isArray(jsonData.insumos) ? jsonData.insumos : [],
+                            recetas: Array.isArray(jsonData.recetas) ? jsonData.recetas : []
+                        };
+                        if (!db.identidad.clave) db.identidad.clave = "1234";
+                        if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+                        guardarEnLocalStorage();
+                        sincronizarFormulariosIdentidad();
+                        renderizarTodo();
+                    }
+                })
+                .catch(() => {});
+
             if(!db.identidad.clave) db.identidad.clave = "1234";
             
             sincronizarFormulariosIdentidad();
