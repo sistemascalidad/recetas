@@ -903,6 +903,7 @@
          * ====================================================================
          */
         const STORE_KEY = "gastro_pro_db";
+        const AUTO_SYNC_DATE_KEY = "gastro_auto_sync_date";
         
         let db = {
             identidad: { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" },
@@ -935,33 +936,84 @@
                 if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
                 if (!db.identidad) db.identidad = { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" };
             }
-
-            fetch('./respaldo_gastro_YYYY-MM-DD.json?ts=' + Date.now(), { cache: 'no-store' })
-                .then(response => {
-                    if (!response.ok) throw new Error('No se pudo cargar respaldo_gastro_YYYY-MM-DD.json');
-                    return response.json();
-                })
-                .then(jsonData => {
-                    if (jsonData && typeof jsonData === 'object') {
-                        db = {
-                            identidad: jsonData.identidad || { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" },
-                            insumos: Array.isArray(jsonData.insumos) ? jsonData.insumos : [],
-                            recetas: Array.isArray(jsonData.recetas) ? jsonData.recetas : []
-                        };
-                        if (!db.identidad.clave) db.identidad.clave = "1234";
-                        if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
-                        guardarEnLocalStorage();
-                        sincronizarFormulariosIdentidad();
-                        renderizarTodo();
-                    }
-                })
-                .catch(() => {});
-
             if(!db.identidad.clave) db.identidad.clave = "1234";
             
             sincronizarFormulariosIdentidad();
             renderizarTodo();
+            sincronizarRespaldoAutomaticamente();
         });
+
+        async function sincronizarRespaldoAutomaticamente() {
+            try {
+                const rutaActual = window.location.pathname;
+                const segmentos = rutaActual.split('/').filter(Boolean);
+                const host = window.location.hostname;
+                let propietario = '';
+                let repositorio = '';
+                let rutaDirectorio = '';
+
+                if (host.endsWith('.github.io')) {
+                    propietario = host.split('.')[0];
+                    if (segmentos.length > 0) {
+                        repositorio = segmentos[0];
+                        rutaDirectorio = segmentos.slice(1).join('/');
+                    } else {
+                        repositorio = propietario + '.github.io';
+                    }
+                } else {
+                    return;
+                }
+
+                const apiUrl = `https://api.github.com/repos/${encodeURIComponent(propietario)}/${encodeURIComponent(repositorio)}/contents/${rutaDirectorio}`;
+                const respuesta = await fetch(apiUrl, { cache: 'no-store' });
+                if (!respuesta.ok) return;
+
+                const archivos = await respuesta.json();
+                if (!Array.isArray(archivos)) return;
+
+                const respaldos = archivos
+                    .filter(archivo => archivo.type === 'file' && /^respaldo_gastro_\d{4}-\d{2}-\d{2}\.json$/.test(archivo.name))
+                    .map(archivo => ({
+                        ...archivo,
+                        fecha: archivo.name.match(/^respaldo_gastro_(\d{4}-\d{2}-\d{2})\.json$/)[1]
+                    }))
+                    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+                if (respaldos.length === 0) return;
+
+                const respaldoMasReciente = respaldos[0];
+                const fechaUltimoRespaldoSincronizado = localStorage.getItem(AUTO_SYNC_DATE_KEY);
+
+                if (fechaUltimoRespaldoSincronizado === respaldoMasReciente.fecha) return;
+
+                const respuestaJson = await fetch(respaldoMasReciente.download_url, { cache: 'no-store' });
+                if (!respuestaJson.ok) return;
+
+                let content = await respuestaJson.text();
+                if (content.charCodeAt(0) === 0xFEFF) {
+                    content = content.slice(1);
+                }
+
+                const importedDb = JSON.parse(content);
+                if (!importedDb || typeof importedDb !== 'object') return;
+
+                db = {
+                    identidad: importedDb.identidad || { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" },
+                    insumos: Array.isArray(importedDb.insumos) ? importedDb.insumos : [],
+                    recetas: Array.isArray(importedDb.recetas) ? importedDb.recetas : []
+                };
+
+                if (!db.identidad.clave) db.identidad.clave = "1234";
+                if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+                guardarEnLocalStorage();
+                localStorage.setItem(AUTO_SYNC_DATE_KEY, respaldoMasReciente.fecha);
+                sincronizarFormulariosIdentidad();
+                renderizarTodo();
+            } catch (error) {
+                console.warn("No fue posible sincronizar automáticamente el respaldo JSON.", error);
+            }
+        }
 
         function manejarCargaImagen(event, targetInputId) {
             const file = event.target.files[0];
