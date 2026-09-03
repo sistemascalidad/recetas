@@ -1,0 +1,2192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recetario Panaderia & Pasteleria Calidad</title>
+    <style>
+        :root {
+            --bg-main: #f8f9fa;
+            --surface: #ffffff;
+            --primary: #d32f2f;
+            --primary-hover: #b71c1c;
+            --dark: #212121;
+            --text-muted: #666666;
+            --border: #e0e0e0;
+            --success: #2e7d32;
+            --badge-bg: #424242;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- NAVEGACIÓN Y LOGO --- */
+        header {
+            background-color: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo-img {
+            max-height: 50px;
+            max-width: 150px;
+            object-fit: contain;
+            display: none;
+        }
+
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--dark);
+            letter-spacing: -0.5px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: #e0e0e0; color: var(--dark); }
+        .btn-secondary:hover { background-color: #d5d5d5; }
+        .btn-danger { background-color: #c62828; color: white; }
+
+        /* --- VISTAS (PÁGINAS) --- */
+        .page { padding: 30px; max-width: 1200px; margin: 0 auto; }
+        .hidden { display: none !important; }
+
+        /* --- CATÁLOGO PRINCIPAL --- */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .recipe-card {
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .recipe-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.08); }
+        .recipe-thumb { width: 100%; height: 200px; object-fit: cover; background-color: #eaeaea; }
+        .recipe-info { padding: 15px; }
+        .recipe-info h3 { margin: 0; font-size: 1.2rem; color: var(--dark); }
+
+        .cat-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--badge-bg);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* --- PANEL ADMINISTRATIVO CON PESTAÑAS --- */
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        @media (min-width: 900px) {
+            .admin-layout { grid-template-columns: 250px 1fr; }
+        }
+
+        .admin-nav {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: fit-content;
+        }
+
+        .admin-nav-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--dark);
+            text-align: left;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: background 0.2s, border 0.2s;
+        }
+
+        .admin-nav-btn:hover {
+            background: var(--bg-main);
+        }
+
+        .admin-nav-btn.active {
+            background: #ffebee;
+            color: var(--primary);
+            border: 1px solid #ffcdd2;
+            font-weight: bold;
+        }
+
+        .panel-card {
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            margin-bottom: 20px;
+        }
+
+        .panel-card h2 { margin-top: 0; font-size: 1.4rem; border-bottom: 2px solid var(--bg-main); padding-bottom: 12px; margin-bottom: 20px;}
+
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; font-family: inherit;
+        }
+        
+        /* TEXTO EN MAYÚSCULAS PARA INPUTS MANUALES */
+        input[type="text"], textarea {
+            text-transform: uppercase;
+        }
+        
+        .form-group input[readonly] { background-color: var(--bg-main); font-weight: bold; color: var(--success); }
+
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: var(--bg-main); }
+
+        /* --- MODALES / VENTANAS FLOTANTES --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            padding: 20px; box-sizing: border-box;
+        }
+
+        .modal-content {
+            background: var(--surface); padding: 30px; border-radius: 12px;
+            width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; position: relative;
+        }
+
+        .close-modal {
+            position: absolute; top: 15px; right: 15px; font-size: 1.5rem; cursor: pointer; background: none; border: none; font-weight: bold;
+        }
+
+        .modal-img { width: 100%; height: 250px; object-fit: cover; border-radius: 8px; margin-bottom: 15px; }
+
+        .kpi-badge-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0; }
+        .kpi-badge { background: var(--bg-main); padding: 12px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        .kpi-badge span { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+        .kpi-badge strong { font-size: 1.1rem; color: var(--dark); }
+        
+        .prep-section { background: var(--bg-main); padding: 20px; border-radius: 8px; margin-top: 15px; }
+        .prep-section h4 { margin-top: 0; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .times-row { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; color: var(--primary); align-items: center; }
+
+        /* --- ESTILOS DE UX MEJORADA PARA RECETAS (APOYO VISUAL) --- */
+        .ux-step-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.015);
+        }
+        .ux-step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .ux-step-number {
+            background: var(--primary);
+            color: white;
+            font-weight: 800;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .ux-step-title {
+            margin: 0;
+            font-size: 1.08rem;
+            color: var(--dark);
+            font-weight: 700;
+        }
+        .ux-step-desc {
+            margin: 2px 0 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+        .ux-help-text {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-text" id="hdr-nombre-negocio">Mi Negocio</div>
+            <img id="hdr-logo-img" class="header-logo-img" src="" alt="Logo">
+        </div>
+        <div id="nav-buttons">
+            <button class="btn-primary" id="btn-to-admin" onclick="ingresarAPanel()">Panel Administrativo</button>
+            <button class="btn-secondary hidden" id="btn-to-catalog" onclick="mostrarVista('catalogo')">Volver al Menú</button>
+        </div>
+    </header>
+
+    <main id="view-catalogo" class="page">
+        <h2 style="margin-bottom: 5px;">RECETARIO PANADERIA & PASTELERIA</h2>
+        <p style="color: var(--text-muted); margin-top: 0;">Selecciona una preparación para ver su ficha técnica.</p>
+        
+        <div class="filter-bar">
+            <button class="btn-primary" id="flt-todos" onclick="filtrarCatalogo('Todos')">Todas las Recetas</button>
+            <button class="btn-secondary" id="flt-panaderia" onclick="filtrarCatalogo('Panadería')">Panadería</button>
+            <button class="btn-secondary" id="flt-pasteleria" onclick="filtrarCatalogo('Pastelería')">Pastelería</button>
+        </div>
+
+        <div id="catalog-container" class="catalog-grid"></div>
+    </main>
+
+    <main id="view-admin" class="page hidden">
+        <div class="admin-layout">
+            
+            <nav class="admin-nav">
+                <h3 style="margin-top: 0; margin-bottom: 15px; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Módulos</h3>
+                <button class="admin-nav-btn active" id="tab-btn-config" onclick="solicitarAccesoModulo('config')">⚙️ Configuración</button>
+                <button class="admin-nav-btn" id="tab-btn-insumos" onclick="solicitarAccesoModulo('insumos')">🛒 Insumos</button>
+                <button class="admin-nav-btn" id="tab-btn-recetas" onclick="solicitarAccesoModulo('recetas')">📝 Recetas</button>
+                <button class="admin-nav-btn" id="tab-btn-produccion" onclick="solicitarAccesoModulo('produccion')">📦 Órdenes de Prod.</button>
+            </nav>
+
+            <div class="admin-content">
+                
+                <div id="tab-config" class="tab-section">
+                    <div class="panel-card">
+                        <h2>Identidad del Negocio</h2>
+                        <div class="form-group">
+                            <label>Nombre Comercial:</label>
+                            <input type="text" id="id-nombre">
+                        </div>
+                        <div class="form-group">
+                            <label>Logotipo (URL o Archivo):</label>
+                            <input type="url" id="id-logo-url" placeholder="https://ejemplo.com/logo.png" oninput="document.getElementById('id-logo-file').value = ''">
+                            <input type="file" id="id-logo-file" accept="image/*" style="margin-top: 5px;" onchange="manejarCargaImagen(event, 'id-logo-url')">
+                        </div>
+                        <div class="form-group">
+                            <label>Nombre Pestaña de Navegación:</label>
+                            <input type="text" id="id-tab-nombre" placeholder="Ej. Recetario Calidad">
+                        </div>
+                        <div class="form-group">
+                            <label>Clave Admin:</label>
+                            <input type="password" id="id-pass">
+                        </div>
+                        <button class="btn-primary" onclick="guardarIdentidadBtn()" style="width: 100%;">Guardar Identidad</button>
+                        
+                        <div style="margin-top: 25px; border-top: 1px solid #ffcdd2; padding-top: 15px;">
+                            <button class="btn-danger" onclick="borrarTodosLosDatos()" style="width: 100%;">⚠️ Borrar Todos Los Datos</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <h2>Gestión de Base de Datos</h2>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <button class="btn-secondary" onclick="exportarDatos()">Descargar Respaldo (JSON)</button>
+                            </div>
+                            <div class="form-group">
+                                <input type="file" id="file-import" accept=".json" style="display: none;" onchange="importarDatos(event)">
+                                <button class="btn-primary" onclick="document.getElementById('file-import').click()">Cargar Respaldo (JSON)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-insumos" class="tab-section hidden">
+                    <div class="panel-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg-main); padding-bottom: 12px; margin-bottom: 20px;">
+                            <h2 style="border: none; padding: 0; margin: 0;">Materia Prima e Insumos</h2>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="file" id="file-import-csv" accept=".csv" style="display: none;" onchange="importarInsumosCSV(event)">
+                                <button class="btn-secondary" onclick="document.getElementById('file-import-csv').click()" style="font-size: 0.85rem; padding: 6px 12px;">📤 Importar CSV</button>
+                                <button class="btn-secondary" onclick="exportarInsumosCSV()" style="font-size: 0.85rem; padding: 6px 12px;">📥 Exportar CSV</button>
+                            </div>
+                        </div>
+                        
+                        <form onsubmit="registrarInsumo(event)" style="background: var(--bg-main); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label>Nombre del Ingrediente:</label>
+                                <input type="text" id="ins-nombre" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Unidad:</label>
+                                    <select id="ins-unidad">
+                                        <option value="g">Gramos (g)</option>
+                                        <option value="kg">Kilogramos (kg)</option>
+                                        <option value="lb">Libras (lb)</option>
+                                        <option value="l">Litros (l)</option>
+                                        <option value="ml">Mililitros (ml)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cant. Formato. Presentación:</label>
+                                    <input type="number" step="0.01" id="ins-formato" required onchange="confirmarUnidadFormato()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Precio Compra ($):</label>
+                                    <input type="number" step="0.01" id="ins-precio" required>
+                                </div>
+                            </div>
+                            <button type="submit" id="btn-registrar-insumo" class="btn-primary" style="width:100%;">Registrar Insumo</button>
+                        </form>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <input type="text" id="ins-buscar" placeholder="🔍 Buscar materia prima..." onkeyup="filtrarInsumos()">
+                        </div>
+
+                        <table id="tbl-insumos">
+                            <thead><tr><th>Ingrediente / Conversión</th><th>Unidad</th><th>Cant. Formato</th><th>Precio Compra</th><th>Costo Unit. (g)</th><th></th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-recetas" class="tab-section hidden">
+                    <div class="panel-card" style="border: none; box-shadow: none; padding: 0; background: transparent;">
+                        <h2 id="creador-titulo" style="background: var(--surface); padding: 20px; border-radius: 10px; border: 1px solid var(--border); margin-top: 0; margin-bottom: 20px;">Crear / Editar Receta</h2>
+
+                        <div class="ux-step-card">
+                            <div class="ux-step-header">
+                                <div class="ux-step-number">1</div>
+                                <div>
+                                    <h3 class="ux-step-title">Información General</h3>
+                                    <p class="ux-step-desc">Datos básicos, categoría y fotografía representativa de la preparación.</p>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label>Nombre de la Receta:</label>
+                                    <input type="text" id="rec-nombre" placeholder="Ej. Masa Madre Básica">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>Categoría:</label>
+                                    <select id="rec-categoria" onchange="renderizarInsumos(); renderizarBorrador(); evaluarCategoria()">
+                                        <option value="Panadería">Panadería</option>
+                                        <option value="Pastelería">Pastelería</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="sec-tipo-pan" style="flex: 1; display: flex;">
+                                    <label>Tipo de Pan:</label>
+                                    <select id="rec-tipo-pan" onchange="renderizarBorrador()">
+                                        <option value="">-- Seleccione --</option>
+                                        <option value="Blanco">Blanco</option>
+                                        <option value="Integral">Integral</option>
+                                        <option value="Multigranos">Multigranos</option>
+                                        <option value="Cereales">Cereales</option>
+                                        <option value="Con Masa Madre">Con Masa Madre</option>
+                                        <option value="Biga">Biga</option>
+                                        <option value="Esponja">Esponja</option>
+                                        <option value="Poolish">Poolish</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Foto (URL o Archivo):</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="url" id="rec-foto-url" placeholder="https://ejemplo.com/foto.jpg" oninput="document.getElementById('rec-foto-file').value = ''" style="flex: 1;">
+                                    <input type="file" id="rec-foto-file" accept="image/*" onchange="manejarCargaImagen(event, 'rec-foto-url')" style="flex: 1;">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label>Descripción breves notas o características:</label>
+                                <textarea id="rec-descripcion" rows="2" placeholder="Breve reseña de la receta..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="ux-step-card">
+                            <div class="ux-step-header">
+                                <div class="ux-step-number">2</div>
+                                <div>
+                                    <h3 class="ux-step-title">Fórmula Base: Mezcla de Harinas (100%)</h3>
+                                    <p class="ux-step-desc">Establece el peso total de harinas. Todas las harinas añadidas aquí conforman el 100% de la formula panadera.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row" style="align-items: flex-end;">
+                                <div class="form-group" style="flex: 1.5;">
+                                    <label>Peso Total Harinas (100% en g/ml):</label>
+                                    <input type="number" step="0.01" id="rec-peso-base" value="1000" oninput="document.getElementById('rec-porcentaje').value=''; document.getElementById('rec-cant-neta').value='';" placeholder="Ej. 1000">
+                                    <span class="ux-help-text">Peso referencial sobre el que se calcula toda la fórmula.</span>
+                                </div>
+                                <div class="form-group" style="flex: 1.5;">
+                                    <label>Tipo de Harina:</label>
+                                    <select id="rec-clasificacion-harina">
+                                        <option value="harina blanca">Harina Blanca</option>
+                                        <option value="harina integral">Harina Integral</option>
+                                        <option value="harina de maiz">Harina de Maíz</option>
+                                        <option value="salvado de trigo">Salvado de Trigo</option>
+                                        <option value="avena">Avena</option>
+                                        <option value="premezcla">Premezcla</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 2;">
+                                    <label>Harina para el Mix:</label>
+                                    <select id="rec-tipo-harina"></select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label>% en Mix:</label>
+                                    <input type="number" step="0.1" id="rec-porcentaje-harina" placeholder="Ej. 80">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <button type="button" class="btn-primary" onclick="agregarHarinaBase()" style="width: 100%;">Añadir Harina</button>
+                                </div>
+                            </div>
+                            
+                            <div id="alerta-mix-harinas" style="font-size: 0.85rem; font-weight: bold; margin-top: 15px; height: 15px; display: flex; align-items: center;"></div>
+                        </div>
+
+                        <div class="ux-step-card">
+                            <div class="ux-step-header">
+                                <div class="ux-step-number">3</div>
+                                <div>
+                                    <h3 class="ux-step-title">Ingredientes Adicionales y Costeo</h3>
+                                    <p class="ux-step-desc">Agrega agua, levadura, sal, grasa y demás insumos según su % panadero o en cantidad neta (g/ml).</p>
+                                </div>
+                            </div>
+
+                            <form onsubmit="agregarIngredienteABorrador(event)" class="form-row" style="align-items: flex-end; background: var(--bg-main); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label>Seleccionar Insumo Extra:</label>
+                                    <select id="rec-select-insumo"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>% Panadero:</label>
+                                    <input type="number" step="0.01" id="rec-porcentaje" min="0" placeholder="Ej. 2.0" oninput="calcularCantNetaDesdePorcentaje()">
+                                    <span class="ux-help-text">Calcula la cant. neta autom.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Cant. Neta (g/ml):</label>
+                                    <input type="number" step="0.001" id="rec-cant-neta" required placeholder="Ej. 20" oninput="calcularPorcentajeDesdeCantNeta()">
+                                    <span class="ux-help-text">Peso real a incorporar.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Merma (%):</label>
+                                    <input type="number" step="0.1" id="rec-merma" value="0" min="0" max="99">
+                                    <span class="ux-help-text">Desperdicio normal.</span>
+                                </div>
+                                <div class="form-group">
+                                    <button type="submit" class="btn-primary" style="width: 100%;">Añadir Insumo</button>
+                                </div>
+                            </form>
+
+                            <table id="tbl-borrador">
+                                <thead><tr><th>Ingrediente</th><th>%</th><th>Cant. Bruta</th><th>Costo</th><th>Acción</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                            <div style="text-align: right; margin-top: 15px; font-weight: bold; font-size: 1.15rem; color: var(--dark); border-top: 1px solid var(--border); padding-top: 12px;">
+                                Costo de Elaboración: <span id="lbl-borrador-total" style="color: var(--primary);">$0.00</span><br>
+                                Peso Total de la Masa: <span id="lbl-borrador-peso" style="color: var(--primary);">0.00 g</span>
+                                <div style="display: flex; justify-content: flex-end; align-items: center; margin-top: 10px; font-size: 1rem; font-weight: normal;">
+                                    <label style="margin-right: 10px; font-weight: bold;">Factor % Materia Prima:</label>
+                                    <input type="number" step="0.01" id="rec-factor-mp" value="23.67" readonly style="width: 100px; padding: 5px; border: 1px solid var(--border); border-radius: 6px; text-align: right;">
+                                </div>
+                                <div style="margin-top: 5px; font-size: 1.15rem;">
+                                    Costo Calculado: <span id="lbl-costo-calculado" style="color: var(--success);">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ux-step-card">
+                            <div class="ux-step-header">
+                                <div class="ux-step-number">4</div>
+                                <div>
+                                    <h3 class="ux-step-title">Instrucciones de Preparación</h3>
+                                    <p class="ux-step-desc">Detalla el procedimiento de la receta. Presiona "Enter" al terminar cada línea para crear pasos numerados automáticos.</p>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <textarea id="rec-preparacion" rows="4" placeholder="Paso 1: Mezclar los ingredientes..." onkeydown="manejarPasosPreparacion(event)"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="ux-step-card">
+                            <div class="ux-step-header">
+                                <div class="ux-step-number">5</div>
+                                <div>
+                                    <h3 class="ux-step-title">Tiempos de los Procesos</h3>
+                                    <p class="ux-step-desc">Registra el tiempo aproximado en minutos de cada etapa operativa.</p>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>1. T. Amasado (min):</label>
+                                    <input type="number" id="rec-amasado" placeholder="Ej. 15">
+                                </div>
+                                <div class="form-group">
+                                    <label>2. Reposo Conj. (min):</label>
+                                    <input type="number" id="rec-reposo" placeholder="Ej. 30">
+                                </div>
+                                <div class="form-group">
+                                    <label>3. Div./Boleo.:</label>
+                                    <input type="number" id="rec-formado" placeholder="Ej. 20">
+                                </div>
+                                <div class="form-group">
+                                    <label>4. Ferm. en Lata (min):</label>
+                                    <input type="number" id="rec-fermentacion" placeholder="Ej. 45">
+                                </div>
+                                <div class="form-group">
+                                    <label>5. Temp. Horno (°C):</label>
+                                    <input type="number" id="rec-temphorno" placeholder="Ej. 180">
+                                </div>
+                                <div class="form-group">
+                                    <label>6. Horneo (min):</label>
+                                    <input type="number" id="rec-horneado" placeholder="Ej. 25">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ux-step-card">
+                            <div class="ux-step-header">
+                                <div class="ux-step-number">6</div>
+                                <div>
+                                    <h3 class="ux-step-title">Rentabilidad, Márgenes y Rendimiento (P.V.P.)</h3>
+                                    <p class="ux-step-desc">Establece los márgenes operativos y el gramaje por porción para obtener el precio de venta sugerido.</p>
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="background: var(--bg-main); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Mano de Obra (%):</label>
+                                    <input type="number" step="0.1" id="rec-mo" value="33.38" readonly>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Carga Fabril (%):</label>
+                                    <input type="number" step="0.1" id="rec-cf" value="12.94" readonly>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Utilidad Deseada (%):</label>
+                                    <input type="number" step="0.1" id="rec-utilidad" value="30.01" oninput="calcularPrecioVenta()">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Precio Elavoracion Total ($):</label>
+                                    <input type="text" id="rec-precio" readonly value="$0.00">
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="background: #eef6ff; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Peso Porción (g) [Peso P.]:</label>
+                                    <input type="number" step="0.1" id="rec-peso-porcion" placeholder="Ej. 60" oninput="calcularPrecioVenta()">
+                                    <span class="ux-help-text">Gramaje individual para la venta.</span>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>Porciones Totales [Cant. Total]:</label>
+                                    <input type="text" id="rec-cant-porciones" readonly value="0 porciones">
+                                    <span class="ux-help-text">Cálculo de unidades resultantes.</span>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label>P.V.P. Unitario ($/und):</label>
+                                    <input type="text" id="rec-pvp-unitario" readonly value="$0.00">
+                                    <span class="ux-help-text">Precio de venta por unidad.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary" onclick="guardarReceta()" style="width: 100%; font-size: 1.1rem; padding: 15px; background-color: var(--success); border-radius: 8px; box-shadow: 0 4px 10px rgba(46,125,50,0.2);" id="btn-guardar-receta">
+                            Guardar Receta
+                        </button>
+                    </div>
+                </div>
+
+                <div id="tab-produccion" class="tab-section hidden">
+                    <div class="panel-card">
+                        <h2>Órdenes de Producción (Escalador de Recetas)</h2>
+                        
+                        <div class="form-row" style="margin-bottom: 20px;">
+                            <div class="form-group" style="flex: 2;">
+                                <label>1. Seleccionar Receta a Producir:</label>
+                                <select id="prod-select-receta" onchange="cargarRecetaProduccion()"></select>
+                            </div>
+                        </div>
+
+                        <fieldset style="border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 15px; background: var(--bg-main);">
+                            <legend style="font-weight: bold; padding: 0 5px; font-size: 0.9rem;">Calculadora de Producción Automática</legend>
+                            <div class="form-row" style="align-items: flex-end;">
+                                <div class="form-group">
+                                    <label>A. Peso Total Mix Harinas (g/ml):</label>
+                                    <input type="number" step="0.01" id="prod-peso-base" oninput="calcularProduccion('base')" placeholder="Ej. 1000">
+                                </div>
+                                <div class="form-group" style="text-align: center; flex: 0.2;">
+                                    <span style="font-size: 1.5rem; color: var(--text-muted);">↔️</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>B. Gramaje por Porción (g):</label>
+                                    <input type="number" step="0.01" id="prod-gramaje-porcion" oninput="calcularProduccion('porciones')" placeholder="Ej. 50">
+                                </div>
+                                <div class="form-group">
+                                    <label>C. Cantidad de Porciones:</label>
+                                    <input type="number" step="0.1" id="prod-porciones" oninput="calcularProduccion('porciones')" placeholder="Ej. 20">
+                                </div>
+                            </div>
+                            <div style="text-align: right; margin-top: 10px; font-weight: bold; font-size: 1.1rem; color: var(--primary);">
+                                Masa Total Proyectada: <span id="prod-lbl-masa-total">0.00 g</span>
+                            </div>
+                        </fieldset>
+
+                        <table id="tbl-produccion" style="margin-top: 20px;">
+                            <thead>
+                                <tr>
+                                    <th>Ingrediente</th>
+                                    <th>% (Sobre Harinas)</th>
+                                    <th>Cantidad Requerida</th>
+                                    <th>Costo Proyectado</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        
+                        <div style="text-align: right; margin-top: 15px; font-weight: bold; font-size: 1.2rem;">
+                            Costo Total Producción: <span id="prod-lbl-costo-total">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-detalle" class="modal-overlay hidden" onclick="if(event.target === this) cerrarModal()">
+        <div class="modal-content">
+            <button class="close-modal" onclick="cerrarModal()">×</button>
+            <img id="md-foto" class="modal-img" src="" alt="Foto del plato">
+            <h2 id="md-nombre" style="border:none; margin-bottom:5px;">Nombre de la receta</h2>
+            <p id="md-descripcion" style="color: var(--text-muted); margin-top:0;">Descripción...</p>
+            
+            <div class="times-row">
+                <span id="md-categoria-badge" style="background: var(--badge-bg); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; text-transform: uppercase;">Categoría</span>
+                <span id="md-amasado">🥣 Amasado: 0 min</span>
+                <span id="md-reposo">🛋️ Reposo: 0 min</span>
+                <span id="md-formado">🥖 Formado: 0 min</span>
+                <span id="md-fermentacion">🌾 Fermentación: 0 min</span>
+                <span id="md-temphorno">🌡️ Temp: 0 °C</span>
+                <span id="md-horneado">🔥 Horneo: 0 min</span>
+            </div>
+
+            <div class="kpi-badge-group">
+                <div class="kpi-badge">
+                    <span>Costo Elaboración</span>
+                    <strong id="md-costo">$0.00</strong>
+                </div>
+                <div class="kpi-badge">
+                    <span>MO / CF / Utilidad</span>
+                    <strong id="md-margen-badge" style="font-size: 0.95rem;">0% / 0% / 0%</strong>
+                </div>
+                <div class="kpi-badge" style="background-color: #e8f5e9; border-color: #c8e6c9;">
+                    <span>P. Elaboracion Total</span>
+                    <strong id="md-precio" style="color: var(--success);">$0.00</strong>
+                </div>
+                <div class="kpi-badge" style="background-color: #e3f2fd; border-color: #bbdefb;">
+                    <span>Rendimiento</span>
+                    <strong id="md-porciones-badge" style="color: #1565c0;">0 und (0g)</strong>
+                </div>
+                <div class="kpi-badge" style="background-color: #f3e5f5; border-color: #e1bee7;">
+                    <span>P.V.P. Unitario</span>
+                    <strong id="md-pvp-unitario-badge" style="color: #6a1b9a;">$0.00 / und</strong>
+                </div>
+            </div>
+
+            <div class="prep-section">
+                <h4>Zona de Preparación</h4>
+                <p id="md-preparacion" style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.5; margin:0;">Instrucciones...</p>
+            </div>
+
+            <div style="margin-top: 25px; display:flex; gap:10px; justify-content: flex-end;">
+                <button class="btn-secondary" onclick="solicitarModificacion('editar')">Editar Receta</button>
+                <button class="btn-danger" onclick="solicitarModificacion('eliminar')">Eliminar Receta</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-login" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 350px; padding: 25px;">
+            <h2 style="margin-top: 0; border-bottom: 2px solid var(--bg-main); padding-bottom: 8px;">Acceso Administrativo</h2>
+            <div class="form-group">
+                <label>Introduce la clave de acceso:</label>
+                <input type="password" id="login-pass">
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="btn-secondary" onclick="cerrarLogin()">Cancelar</button>
+                <button class="btn-primary" onclick="verificarLogin()">Ingresar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // EVENT LISTENER PARA VOLVER TEXTOS MANUALES A MAYÚSCULAS INTERNAMENTE
+        document.addEventListener('input', function(e) {
+            if ((e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'TEXTAREA') {
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+                e.target.value = e.target.value.toUpperCase();
+                try { e.target.setSelectionRange(start, end); } catch(err) {}
+            }
+        });
+
+        /**
+         * ====================================================================
+         * MÓDULO: Porcentaje Panadero
+         * Gestión de validación de harinas base (100%) y cálculo proporcional.
+         * ====================================================================
+         */
+        const ModuloPorcentajePanadero = (() => {
+
+            function normalizarTexto(texto) {
+                if (!texto || typeof texto !== 'string') return '';
+                return texto
+                    .trim()
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+            }
+
+            function esCategoriaHarina(insumo) {
+                if (insumo.esBase === true) return true;
+                const categoria = normalizarTexto(insumo.categoria || '');
+                const clasificacion = normalizarTexto(insumo.clasificacion || '');
+                return categoria === 'harina' || categoria === 'harinas' || clasificacion.includes('harina');
+            }
+
+            function validarReglasHarina(tipoPan, harinas, pesoTotalHarinas) {
+                const panNormalizado = normalizarTexto(tipoPan);
+                const esPanBlanco = panNormalizado === 'blanco' || panNormalizado === 'pan blanco';
+
+                if (pesoTotalHarinas <= 0 && harinas.length > 0) {
+                    return {
+                        valido: false,
+                        error: 'El peso total de harinas debe ser mayor a 0 para establecer el base 100%.'
+                    };
+                }
+
+                if (esPanBlanco && harinas.length > 0) {
+                    const noBlancas = harinas.filter(h => normalizarTexto(h.clasificacion || h.tipoHarina || h.nombre) !== 'harina blanca');
+                    if (noBlancas.length > 0) {
+                        return {
+                            valido: false,
+                            error: 'Para el Tipo "Blanco", el 100% de la mezcla en harinas debe ser Harina Blanca sin importar la marca.'
+                        };
+                    }
+                }
+
+                if (harinas.length > 0) {
+                    const sumaVerificacion = harinas.reduce((suma, h) => suma + (Number(h.porcentajeBase) || 0), 0);
+                    if (Math.abs(100 - sumaVerificacion) > 0.1) {
+                        return {
+                            valido: false,
+                            error: `El mix de harinas suma ${sumaVerificacion.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1})}%. Debe sumar exactamente 100%.`
+                        };
+                    }
+                }
+
+                return { valido: true, error: null };
+            }
+
+            function calcularReceta(receta) {
+                if (!receta || !Array.isArray(receta.insumos)) {
+                    return {
+                        valido: false,
+                        error: 'Estructura de receta no válida. Se requiere un listado de insumos.',
+                        pesoTotalHarinas: 0,
+                        insumos: []
+                    };
+                }
+
+                const { tipoPan, insumos } = receta;
+                const harinas = insumos.filter(esCategoriaHarina);
+                const pesoTotalHarinas = harinas.reduce((suma, item) => suma + (Number(item.cantidadNeta || item.peso) || 0), 0);
+
+                const validacion = validarReglasHarina(tipoPan, harinas, pesoTotalHarinas);
+                if (!validacion.valido) {
+                    return {
+                        valido: false,
+                        error: validacion.error,
+                        pesoTotalHarinas: Number(pesoTotalHarinas.toFixed(2)),
+                        insumos: insumos
+                    };
+                }
+
+                const insumosCalculados = insumos.map(insumo => {
+                    const peso = Number(insumo.cantidadNeta || insumo.peso) || 0;
+                    const porcentaje = pesoTotalHarinas > 0 ? (peso / pesoTotalHarinas) * 100 : 0;
+
+                    return {
+                        ...insumo,
+                        porcentajePanadero: Number(porcentaje.toFixed(2))
+                    };
+                });
+
+                return {
+                    valido: true,
+                    error: null,
+                    pesoTotalHarinas: Number(pesoTotalHarinas.toFixed(2)),
+                    insumos: insumosCalculados
+                };
+            }
+
+            return {
+                calcularReceta,
+                validarReglasHarina,
+                esCategoriaHarina,
+                normalizarTexto
+            };
+        })();
+
+        /**
+         * ====================================================================
+         * LÓGICA PRINCIPAL DEL APLICATIVO
+         * ====================================================================
+         */
+        const STORE_KEY = "gastro_pro_db";
+        
+        let db = {
+            identidad: { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" },
+            insumos: [],
+            recetas: []
+        };
+
+        let borradorIngredientes = []; 
+        let costoBorradorActual = 0;
+        let pesoTotalMasaActual = 0;
+        let idRecetaActiva = null; 
+        let idRecetaVerDetalle = null;
+        let idInsumoActivo = null;
+        let filtroCatalogoActual = 'Todos';
+        let accionPendiente = null;
+        let moduloPendiente = null;
+        let recetaProduccionActual = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("login-pass").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    verificarLogin();
+                }
+            });
+
+            const data = localStorage.getItem(STORE_KEY);
+            if(data) {
+                db = JSON.parse(data);
+                if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+                if (!db.identidad) db.identidad = { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" };
+            }
+            if(!db.identidad.clave) db.identidad.clave = "1234";
+            
+            sincronizarFormulariosIdentidad();
+            renderizarTodo();
+        });
+
+        function manejarCargaImagen(event, targetInputId) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById(targetInputId).value = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function guardarEnLocalStorage() {
+            localStorage.setItem(STORE_KEY, JSON.stringify(db));
+        }
+
+        function mostrarVista(vista) {
+            if(vista === 'admin') {
+                document.getElementById("view-catalogo").classList.add("hidden");
+                document.getElementById("view-admin").classList.remove("hidden");
+                document.getElementById("btn-to-admin").classList.add("hidden");
+                document.getElementById("btn-to-catalog").classList.remove("hidden");
+                cambiarPestana('insumos'); 
+            } else {
+                document.getElementById("view-catalogo").classList.remove("hidden");
+                document.getElementById("view-admin").classList.add("hidden");
+                document.getElementById("btn-to-admin").classList.remove("hidden");
+                document.getElementById("btn-to-catalog").classList.add("hidden");
+                limpiarFormularioReceta();
+            }
+        }
+
+        function cambiarPestana(idPestana) {
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
+            document.querySelectorAll('.admin-nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`tab-${idPestana}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${idPestana}`).classList.add('active');
+        }
+
+        function ingresarAPanel() {
+            accionPendiente = 'admin';
+            document.getElementById("login-pass").value = "";
+            document.getElementById("modal-login").classList.remove("hidden");
+        }
+
+        function solicitarAccesoModulo(modulo) {
+            if (modulo === 'config') {
+                accionPendiente = 'modulo';
+                moduloPendiente = modulo;
+                document.getElementById("login-pass").value = "";
+                document.getElementById("modal-login").classList.remove("hidden");
+            } else {
+                cambiarPestana(modulo);
+            }
+        }
+
+        function cerrarLogin() {
+            document.getElementById("modal-login").classList.add("hidden");
+        }
+
+        function verificarLogin() {
+            const pass = document.getElementById("login-pass").value;
+            if(pass === db.identidad.clave) {
+                cerrarLogin();
+                
+                if (accionPendiente === 'admin') {
+                    mostrarVista('admin');
+                } else if (accionPendiente === 'ver_receta') {
+                    abrirDetalleReceta(idRecetaVerDetalle);
+                } else if (accionPendiente === 'eliminar' || accionPendiente === 'editar') {
+                    const recetaId = idRecetaVerDetalle;
+                    cerrarModal(); 
+                    
+                    if(accionPendiente === 'eliminar') {
+                        db.recetas = db.recetas.filter(r => r.id !== recetaId);
+                        guardarEnLocalStorage();
+                        renderizarTodo();
+                    } else if(accionPendiente === 'editar') {
+                        prepararEdicionReceta(recetaId);
+                    }
+                } else if (accionPendiente === 'modulo') {
+                    cambiarPestana(moduloPendiente);
+                }
+            } else {
+                alert("Clave incorrecta. Acceso denegado.");
+            }
+        }
+
+        function sincronizarFormulariosIdentidad() {
+            const lblTexto = document.getElementById("hdr-nombre-negocio");
+            const lblImg = document.getElementById("hdr-logo-img");
+            
+            lblTexto.textContent = db.identidad.nombre;
+            
+            if(db.identidad.logoUrl) {
+                lblImg.src = db.identidad.logoUrl;
+                lblImg.style.display = "block";
+            } else {
+                lblImg.style.display = "none";
+            }
+
+            document.title = db.identidad.tabNombre || "Recetario Panaderia & Pasteleria Calidad";
+
+            document.getElementById("id-nombre").value = db.identidad.nombre;
+            document.getElementById("id-logo-url").value = db.identidad.logoUrl || "";
+            document.getElementById("id-tab-nombre").value = db.identidad.tabNombre || "";
+            document.getElementById("id-pass").value = db.identidad.clave;
+        }
+
+        function actualizarIdentidad() {
+            db.identidad.nombre = document.getElementById("id-nombre").value || "Mi Negocio";
+            db.identidad.logoUrl = document.getElementById("id-logo-url").value;
+            db.identidad.tabNombre = document.getElementById("id-tab-nombre").value;
+            db.identidad.clave = document.getElementById("id-pass").value || "1234";
+            guardarEnLocalStorage();
+            sincronizarFormulariosIdentidad();
+        }
+
+        function guardarIdentidadBtn() {
+            actualizarIdentidad();
+            alert("Identidad del negocio guardada correctamente.");
+        }
+
+        function borrarTodosLosDatos() {
+            if(confirm("⚠️ ADVERTENCIA: Estás a punto de borrar TODOS los datos (insumos, recetas y configuraciones). Esta acción NO se puede deshacer. ¿Estás seguro de que deseas continuar?")) {
+                localStorage.removeItem(STORE_KEY);
+                location.reload();
+            }
+        }
+
+        function exportarDatos() {
+            const dataStr = JSON.stringify(db, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "respaldo_gastro_" + new Date().toISOString().split('T')[0] + ".json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importarDatos(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let content = e.target.result;
+                    // Eliminar carácter BOM si existe en el archivo
+                    if (content.charCodeAt(0) === 0xFEFF) {
+                        content = content.slice(1);
+                    }
+                    const importedDb = JSON.parse(content);
+                    
+                    if (importedDb && typeof importedDb === 'object') {
+                        db = {
+                            identidad: importedDb.identidad || { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" },
+                            insumos: Array.isArray(importedDb.insumos) ? importedDb.insumos : [],
+                            recetas: Array.isArray(importedDb.recetas) ? importedDb.recetas : []
+                        };
+
+                        if (!db.identidad.clave) db.identidad.clave = "1234";
+                        if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+                        guardarEnLocalStorage();
+                        sincronizarFormulariosIdentidad();
+                        renderizarTodo();
+                        alert("Base de datos restaurada con éxito.");
+                    } else {
+                        alert("El archivo no tiene el formato correcto.");
+                    }
+                } catch (error) {
+                    alert("Error al leer el archivo JSON.");
+                }
+                event.target.value = ""; 
+            };
+            reader.readAsText(file);
+        }
+
+        function importarInsumosCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const rows = content.split('\n');
+                let count = 0;
+
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i].trim();
+                    if (!row) continue;
+
+                    const cols = row.split(/[,;]/); 
+                    
+                    if (cols.length >= 4) {
+                        const nombre = cols[0].trim();
+                        const unidad = cols[1].trim() || 'g'; 
+                        const precio = parseFloat(cols[2].trim().replace(',', '.')); 
+                        const formato = parseFloat(cols[3].trim().replace(',', '.'));
+
+                        const nombreLower = nombre.toLowerCase();
+                        const existe = db.insumos.find(ins => ins.nombre.toLowerCase() === nombreLower);
+
+                        if (nombre && !isNaN(precio) && !isNaN(formato) && formato > 0 && !existe) {
+                            db.insumos.push({
+                                id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+                                nombre: nombre,
+                                unidadOriginal: unidad,
+                                unidad: 'g', 
+                                precioUnitario: precio / (formato * (unidad === 'kg' || unidad === 'l' ? 1000 : (unidad === 'lb' ? 453.592 : 1))),
+                                precioOriginal: precio,
+                                formatoOriginal: formato,
+                                formatoGramos: formato * (unidad === 'kg' || unidad === 'l' ? 1000 : (unidad === 'lb' ? 453.592 : 1))
+                            });
+                            count++;
+                        }
+                    }
+                }
+
+                if (count > 0) {
+                    db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+                    actualizarCostosRecetas();
+                    guardarEnLocalStorage();
+                    renderizarInsumos();
+                    renderizarBorrador();
+                    renderizarCatalogo();
+                    alert(`¡Éxito! Se importaron ${count} insumos correctamente. Se omitieron los duplicados.`);
+                } else {
+                    alert("No se encontraron insumos válidos o ya existían en la base de datos.");
+                }
+                
+                event.target.value = ""; 
+            };
+            reader.readAsText(file);
+        }
+
+        function exportarInsumosCSV() {
+            if (!db.insumos || db.insumos.length === 0) {
+                alert("No hay insumos registrados para exportar.");
+                return;
+            }
+
+            let csvContent = "Nombre del Ingrediente,Unidad,Precio Compra,Cant. Formato\n";
+
+            db.insumos.forEach(ins => {
+                const nombre = ins.nombre.replace(/"/g, '""'); 
+                const unidad = ins.unidadOriginal || ins.unidad || 'g';
+                const precio = ins.precioOriginal !== undefined ? ins.precioOriginal : ins.precioUnitario;
+                const formato = ins.formatoOriginal !== undefined ? ins.formatoOriginal : 1;
+
+                csvContent += `"${nombre}",${unidad},${precio},${formato}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", "materia_prima_insumos.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function confirmarUnidadFormato() {
+            const formatoInput = document.getElementById("ins-formato");
+            const unidadSelect = document.getElementById("ins-unidad");
+            const formato = parseFloat(formatoInput.value);
+            const unidad = unidadSelect.options[unidadSelect.selectedIndex].text;
+
+            if (isNaN(formato) || formato <= 0) return;
+
+            const confirmado = confirm(`¿Está seguro que ${formato} corresponde a la unidad seleccionada: ${unidad}?`);
+            if (!confirmado) {
+                formatoInput.value = "";
+                formatoInput.focus();
+            }
+        }
+
+        function registrarInsumo(e) {
+            e.preventDefault();
+            const nombre = document.getElementById("ins-nombre").value.trim();
+            const unidad = document.getElementById("ins-unidad").value;
+            const precio = parseFloat(document.getElementById("ins-precio").value);
+            const formato = parseFloat(document.getElementById("ins-formato").value);
+
+            const nombreLower = nombre.toLowerCase();
+            const existe = db.insumos.find(i => i.nombre.toLowerCase() === nombreLower);
+
+            let factor = 1;
+            if (unidad === 'kg' || unidad === 'l') factor = 1000;
+            else if (unidad === 'lb') factor = 453.592;
+            
+            const formatoGramos = formato * factor;
+            const precioUnitario = precio / formatoGramos;
+
+            if (idInsumoActivo) {
+                if (existe && existe.id !== idInsumoActivo) {
+                    alert("Ya existe un insumo con ese nombre.");
+                    return;
+                }
+
+                const index = db.insumos.findIndex(i => i.id === idInsumoActivo);
+                if (index > -1) {
+                    db.insumos[index].nombre = nombre;
+                    db.insumos[index].unidadOriginal = unidad;
+                    db.insumos[index].unidad = 'g';
+                    db.insumos[index].precioUnitario = precioUnitario;
+                    db.insumos[index].precioOriginal = precio;
+                    db.insumos[index].formatoOriginal = formato;
+                    db.insumos[index].formatoGramos = formatoGramos;
+
+                    actualizarCostosRecetas();
+                }
+                idInsumoActivo = null;
+                document.getElementById("btn-registrar-insumo").textContent = "Registrar Insumo";
+            } else {
+                if (existe) {
+                    alert("Ya existe un insumo con ese nombre.");
+                    return;
+                }
+
+                db.insumos.push({
+                    id: Date.now().toString(),
+                    nombre,
+                    unidadOriginal: unidad,
+                    unidad: 'g',
+                    precioUnitario: precioUnitario,
+                    precioOriginal: precio,
+                    formatoOriginal: formato,
+                    formatoGramos: formatoGramos
+                });
+            }
+
+            db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+            guardarEnLocalStorage();
+            document.getElementById("ins-nombre").value = "";
+            document.getElementById("ins-precio").value = "";
+            document.getElementById("ins-formato").value = "";
+            document.getElementById("ins-unidad").value = "g";
+            renderizarInsumos();
+            renderizarBorrador();
+            renderizarCatalogo();
+        }
+
+        function filtrarInsumos() {
+            const query = document.getElementById("ins-buscar").value.toLowerCase();
+            const filas = document.querySelectorAll("#tbl-insumos tbody tr");
+            filas.forEach(fila => {
+                const texto = fila.cells[0].textContent.toLowerCase();
+                fila.style.display = texto.includes(query) ? "" : "none";
+            });
+        }
+
+        function actualizarCostosRecetas() {
+            db.recetas.forEach(receta => {
+                let nuevoCostoTotal = 0;
+                let pesoMasaTotal = 0;
+
+                receta.ingredientes.forEach(ing => {
+                    pesoMasaTotal += (ing.cantidadNeta || 0);
+                    if (!ing.isSubReceta) {
+                        const insumoRaiz = db.insumos.find(i => i.id === ing.insumoId);
+                        if (insumoRaiz) {
+                            ing.costo = ing.cantidadBruta * insumoRaiz.precioUnitario;
+                        }
+                    }
+                    nuevoCostoTotal += ing.costo;
+                });
+                receta.costoTotal = nuevoCostoTotal;
+            });
+
+            db.recetas.forEach(receta => {
+                let nuevoCostoTotal = 0;
+                let pesoMasaTotal = 0;
+
+                receta.ingredientes.forEach(ing => {
+                    pesoMasaTotal += (ing.cantidadNeta || 0);
+                    if (ing.isSubReceta) {
+                        const recetaDependiente = db.recetas.find(r => r.id === ing.insumoId);
+                        if (recetaDependiente) {
+                            const pesoTotalSub = recetaDependiente.ingredientes.reduce((sum, i) => sum + i.cantidadNeta, 0);
+                            const nuevoCostoPorGramo = pesoTotalSub > 0 ? (recetaDependiente.costoTotal / pesoTotalSub) : 0;
+                            ing.costo = ing.cantidadBruta * nuevoCostoPorGramo;
+                        }
+                    }
+                    nuevoCostoTotal += ing.costo;
+                });
+                receta.costoTotal = nuevoCostoTotal;
+                
+                const factorMp = parseFloat(receta.factorMp) || 23.67;
+                const costoCalculado = nuevoCostoTotal;
+
+                const mo = 33.38;
+                const cf = 12.94;
+                const utilidad = receta.utilidad !== undefined ? parseFloat(receta.utilidad) : 30.01;
+                const porcentajeTotal = factorMp + mo + cf + utilidad;
+                receta.precioVenta = porcentajeTotal > 0 ? costoCalculado / (factorMp / porcentajeTotal) : 0;
+
+                if (receta.pesoPorcion && receta.pesoPorcion > 0 && pesoMasaTotal > 0) {
+                    receta.cantPorciones = pesoMasaTotal / receta.pesoPorcion;
+                    receta.pvpUnitario = receta.cantPorciones > 0 ? receta.precioVenta / receta.cantPorciones : 0;
+                }
+            });
+        }
+
+        function editarInsumo(id) {
+            const insumo = db.insumos.find(i => i.id === id);
+            if (!insumo) return;
+
+            const inputNombre = document.getElementById("ins-nombre");
+            inputNombre.value = insumo.nombre;
+            document.getElementById("ins-unidad").value = insumo.unidadOriginal || insumo.unidad || 'g';
+            document.getElementById("ins-formato").value = insumo.formatoOriginal !== undefined ? insumo.formatoOriginal : 1;
+            document.getElementById("ins-precio").value = insumo.precioOriginal !== undefined ? insumo.precioOriginal : insumo.precioUnitario.toFixed(4);
+
+            idInsumoActivo = id;
+            document.getElementById("btn-registrar-insumo").textContent = "Actualizar Insumo";
+            
+            inputNombre.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            inputNombre.focus();
+            inputNombre.setSelectionRange(0, 0);
+        }
+
+        function borrarInsumo(id) {
+            db.insumos = db.insumos.filter(i => i.id !== id);
+            guardarEnLocalStorage();
+            renderizarInsumos();
+            renderizarBorrador();
+        }
+
+        function renderizarInsumos() {
+            const tbody = document.querySelector("#tbl-insumos tbody");
+            const select = document.getElementById("rec-select-insumo");
+            const selectHarina = document.getElementById("rec-tipo-harina");
+            tbody.innerHTML = "";
+            select.innerHTML = "";
+            selectHarina.innerHTML = "";
+
+            db.insumos.forEach(ins => {
+                let row = tbody.insertRow();
+                
+                let conversionText = "";
+                if (ins.formatoOriginal && (ins.unidadOriginal || ins.unidad) && ins.formatoGramos && ins.formatoOriginal !== ins.formatoGramos) {
+                    conversionText = `<br><small style="color: var(--text-muted); font-size: 0.8rem;">Origen: ${ins.formatoOriginal.toLocaleString('en-US')} ${ins.unidadOriginal || ins.unidad} ➔ Convertido: ${ins.formatoGramos.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} g</small>`;
+                } else if (ins.formatoOriginal && ins.formatoOriginal !== 1) {
+                    conversionText = `<br><small style="color: var(--text-muted); font-size: 0.8rem;">Formato: ${ins.formatoOriginal.toLocaleString('en-US')} g</small>`;
+                }
+                
+                row.innerHTML = `<td>${ins.nombre}${conversionText}</td>
+                                 <td>${ins.unidadOriginal || ins.unidad || 'g'}</td>
+                                 <td>${(ins.formatoOriginal !== undefined ? ins.formatoOriginal : 1).toLocaleString('en-US')}</td>
+                                 <td>$${(ins.precioOriginal !== undefined ? ins.precioOriginal : ins.precioUnitario).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                 <td>$${ins.precioUnitario.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4})}/g</td>
+                                 <td style="text-align: right;">
+                                     <button class="btn-secondary" style="padding:2px 6px; margin-right:5px;" onclick="editarInsumo('${ins.id}')">Editar</button>
+                                     <button class="btn-danger" style="padding:2px 6px;" onclick="borrarInsumo('${ins.id}')">X</button>
+                                 </td>`;
+                
+                const nombreLower = ins.nombre.toLowerCase();
+                if (nombreLower.includes("harina") || nombreLower.includes("avena") || nombreLower.includes("salvado") || nombreLower.includes("prem")) {
+                    let optHarina = document.createElement("option");
+                    optHarina.value = ins.nombre;
+                    optHarina.textContent = ins.nombre;
+                    selectHarina.appendChild(optHarina);
+                } else {
+                    let opt = document.createElement("option");
+                    opt.value = ins.id;
+                    opt.textContent = `${ins.nombre} (${ins.unidad})`;
+                    select.appendChild(opt);
+                }
+
+                if (document.getElementById("rec-categoria").value === "Pastelería" && (nombreLower.includes("harina") || nombreLower.includes("avena") || nombreLower.includes("salvado") || nombreLower.includes("prem"))) {
+                    let optHarinaAdicional = document.createElement("option");
+                    optHarinaAdicional.value = ins.id;
+                    optHarinaAdicional.textContent = `${ins.nombre} (${ins.unidad})`;
+                    select.appendChild(optHarinaAdicional);
+                }
+            });
+
+            if (db.recetas && db.recetas.length > 0) {
+                let optGroup = document.createElement("optgroup");
+                optGroup.label = "📋 Tus Recetas Guardadas (Sub-recetas)";
+                
+                db.recetas.forEach(rec => {
+                    if (idRecetaActiva && rec.id === idRecetaActiva) return; 
+                    
+                    const pesoTotalReceta = rec.ingredientes.reduce((sum, i) => sum + i.cantidadNeta, 0);
+                    const costoPorGramo = pesoTotalReceta > 0 ? (rec.costoTotal / pesoTotalReceta) : 0;
+                    
+                    let opt = document.createElement("option");
+                    opt.value = `REC_${rec.id}`; 
+                    opt.textContent = `${rec.nombre} ($${costoPorGramo.toLocaleString('en-US', {minimumFractionDigits: 4, maximumFractionDigits: 4})}/g)`;
+                    optGroup.appendChild(opt);
+                });
+                select.appendChild(optGroup);
+            }
+        }
+
+        function calcularCantNetaDesdePorcentaje() {
+            const categoriaActual = document.getElementById("rec-categoria").value;
+            const porcentaje = parseFloat(document.getElementById("rec-porcentaje").value);
+
+            if (categoriaActual === "Pastelería") {
+                const primerInsumo = borradorIngredientes.length > 0 ? borradorIngredientes[0] : null;
+                const pesoBasePasteleria = primerInsumo ? (Number(primerInsumo.cantidadNeta) || 0) : 0;
+
+                if (pesoBasePasteleria > 0 && !isNaN(porcentaje) && document.activeElement.id === "rec-porcentaje") {
+                    document.getElementById("rec-cant-neta").value = (pesoBasePasteleria * (porcentaje / 100)).toFixed(3);
+                } else if (borradorIngredientes.length === 0) {
+                    document.getElementById("rec-cant-neta").value = "";
+                } else if (isNaN(porcentaje)) {
+                    document.getElementById("rec-cant-neta").value = "";
+                }
+                return;
+            }
+
+            const pesoBase = parseFloat(document.getElementById("rec-peso-base").value);
+            if (!isNaN(pesoBase) && !isNaN(porcentaje) && document.activeElement.id === "rec-porcentaje") {
+                document.getElementById("rec-cant-neta").value = (pesoBase * (porcentaje / 100)).toFixed(3);
+            } else if (isNaN(porcentaje)) {
+                document.getElementById("rec-cant-neta").value = "";
+            }
+        }
+
+        function calcularPorcentajeDesdeCantNeta() {
+            const categoriaActual = document.getElementById("rec-categoria").value;
+            const cantNeta = parseFloat(document.getElementById("rec-cant-neta").value);
+
+            if (categoriaActual === "Pastelería") {
+                if (borradorIngredientes.length === 0) {
+                    document.getElementById("rec-porcentaje").value = isNaN(cantNeta) ? "" : "100.00";
+                    return;
+                }
+
+                const primerInsumo = borradorIngredientes[0];
+                const pesoBasePasteleria = Number(primerInsumo.cantidadNeta) || 0;
+                if (pesoBasePasteleria > 0 && !isNaN(cantNeta) && document.activeElement.id === "rec-cant-neta") {
+                    document.getElementById("rec-porcentaje").value = ((cantNeta / pesoBasePasteleria) * 100).toFixed(2);
+                } else if (isNaN(cantNeta)) {
+                    document.getElementById("rec-porcentaje").value = "";
+                }
+                return;
+            }
+
+            const pesoBase = parseFloat(document.getElementById("rec-peso-base").value);
+            if (!isNaN(pesoBase) && pesoBase > 0 && !isNaN(cantNeta) && document.activeElement.id === "rec-cant-neta") {
+                document.getElementById("rec-porcentaje").value = ((cantNeta / pesoBase) * 100).toFixed(2);
+            } else if (isNaN(cantNeta)) {
+                document.getElementById("rec-porcentaje").value = "";
+            }
+        }
+
+        function agregarHarinaBase() {
+            const clasificacionHarina = document.getElementById("rec-clasificacion-harina").value;
+            const tipoHarinaNombre = document.getElementById("rec-tipo-harina").value;
+            const pesoBase = parseFloat(document.getElementById("rec-peso-base").value) || 0;
+            const porcentajeHarina = parseFloat(document.getElementById("rec-porcentaje-harina").value) || 100;
+            const categoriaActual = document.getElementById("rec-categoria").value;
+
+            if (!tipoHarinaNombre || pesoBase <= 0 || porcentajeHarina <= 0) {
+                alert("Por favor, seleccione una harina, asigne un peso base válido y establezca un porcentaje mayor a 0.");
+                return;
+            }
+
+            let sumaActual = borradorIngredientes.filter(i => i.esBase).reduce((sum, i) => sum + (i.porcentajeBase || 100), 0);
+            
+            if (categoriaActual === "Panadería") {
+                if (sumaActual + porcentajeHarina > 100.1) {
+                    alert(`No puedes añadir esta harina porque el mix superaría el 100%. Llevas ${sumaActual.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1})}% y quieres añadir ${porcentajeHarina}%.`);
+                    return;
+                }
+
+                if (clasificacionHarina === "harina blanca") {
+                    const tipoPanActual = document.getElementById("rec-tipo-pan").value;
+                    const esPanBlanco = ModuloPorcentajePanadero.normalizarTexto(tipoPanActual) === "blanco" || ModuloPorcentajePanadero.normalizarTexto(tipoPanActual) === "pan blanco";
+
+                    if (!esPanBlanco) {
+                        let sumaBlancaActual = borradorIngredientes.filter(i => i.esBase && i.clasificacion === "harina blanca").reduce((sum, i) => sum + (i.porcentajeBase || 100), 0);
+                        if (sumaBlancaActual + porcentajeHarina > 40) {
+                            const confirmar = confirm(`⚠️ Atención: El porcentaje de Harina Blanca excede el 40% permitido según el porcentaje panadero (${(sumaBlancaActual + porcentajeHarina).toLocaleString('en-US')}%). ¿Deseas agregarlo de todos modos?`);
+                            if (!confirmar) {
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            const insumoHarina = db.insumos.find(i => i.nombre === tipoHarinaNombre);
+            if (!insumoHarina) return;
+
+            const cantNetaMix = pesoBase * (porcentajeHarina / 100);
+            let cantCalculo = cantNetaMix;
+            let unidadMostrar = "g";
+
+            if (insumoHarina.unidad === "kg" || insumoHarina.unidad === "l") {
+                cantCalculo = cantNetaMix / 1000;
+                unidadMostrar = insumoHarina.unidad === "kg" ? "g" : "ml";
+            } else {
+                unidadMostrar = insumoHarina.unidad;
+            }
+
+            const costoHarina = cantCalculo * insumoHarina.precioUnitario;
+
+            borradorIngredientes.push({
+                idTemp: Date.now().toString(),
+                insumoId: insumoHarina.id,
+                nombre: `${insumoHarina.nombre} (${porcentajeHarina}%)`,
+                unidad: unidadMostrar,
+                cantidadNeta: cantNetaMix,
+                merma: 0,
+                cantidadBruta: cantNetaMix,
+                costo: costoHarina,
+                esBase: true,
+                porcentajeBase: porcentajeHarina,
+                clasificacion: clasificacionHarina
+            });
+
+            document.getElementById("rec-porcentaje-harina").value = "";
+            renderizarBorrador();
+        }
+
+        function agregarIngredienteABorrador(e) {
+            e.preventDefault();
+            const seleccionado = document.getElementById("rec-select-insumo").value;
+            const cantNeta = parseFloat(document.getElementById("rec-cant-neta").value);
+            const merma = parseFloat(document.getElementById("rec-merma").value) || 0;
+
+            if (!seleccionado || isNaN(cantNeta)) return;
+
+            let nombre, unidad, precioUnitario, idOrigen, esSubReceta;
+
+            if (seleccionado.startsWith("REC_")) {
+                idOrigen = seleccionado.replace("REC_", "");
+                const recetaBase = db.recetas.find(r => r.id === idOrigen);
+                if (!recetaBase) return;
+
+                const pesoTotalReceta = recetaBase.ingredientes.reduce((sum, i) => sum + i.cantidadNeta, 0);
+                nombre = `[Receta] ${recetaBase.nombre}`;
+                unidad = "g";
+                precioUnitario = pesoTotalReceta > 0 ? (recetaBase.costoTotal / pesoTotalReceta) : 0;
+                esSubReceta = true;
+            } else {
+                idOrigen = seleccionado;
+                const insumo = db.insumos.find(i => i.id === idOrigen);
+                if (!insumo) return;
+
+                nombre = insumo.nombre;
+                unidad = insumo.unidad;
+                precioUnitario = insumo.precioUnitario;
+                esSubReceta = false;
+            }
+
+            const factorMerma = 1 - (merma / 100);
+            const cantBruta = cantNeta / factorMerma;
+            const costo = cantBruta * precioUnitario;
+
+            const categoriaActual = document.getElementById("rec-categoria").value;
+            const esPrimerInsumoPasteleria = categoriaActual === "Pastelería" && borradorIngredientes.length === 0;
+
+            borradorIngredientes.push({
+                idTemp: Date.now().toString(),
+                insumoId: idOrigen,
+                nombre: nombre,
+                unidad: unidad,
+                cantidadNeta: cantNeta,
+                merma: merma,
+                cantidadBruta: cantBruta,
+                costo: costo,
+                esBase: false,
+                isSubReceta: esSubReceta,
+                porcentajePastelero: esPrimerInsumoPasteleria ? 100 : undefined
+            });
+
+            document.getElementById("rec-cant-neta").value = "";
+            document.getElementById("rec-porcentaje").value = "";
+            document.getElementById("rec-merma").value = "0";
+            renderizarBorrador();
+        }
+
+        function editarDeBorrador(idTemp) {
+            const itemIndex = borradorIngredientes.findIndex(b => b.idTemp === idTemp);
+            if (itemIndex === -1) return;
+            const item = borradorIngredientes[itemIndex];
+
+            if (item.esBase) {
+                const insumo = db.insumos.find(i => i.id === item.insumoId);
+                if (insumo) {
+                    document.getElementById("rec-tipo-harina").value = insumo.nombre;
+                }
+                document.getElementById("rec-clasificacion-harina").value = item.clasificacion || "harina blanca";
+                document.getElementById("rec-porcentaje-harina").value = item.porcentajeBase;
+                document.getElementById("rec-peso-base").scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                let selectVal = item.isSubReceta ? `REC_${item.insumoId}` : item.insumoId;
+                document.getElementById("rec-select-insumo").value = selectVal;
+                document.getElementById("rec-cant-neta").value = item.cantidadNeta;
+                document.getElementById("rec-merma").value = item.merma || 0;
+                
+                const categoriaActual = document.getElementById("rec-categoria").value;
+                if (categoriaActual === "Pastelería") {
+                    const primerInsumo = borradorIngredientes.length > 0 ? borradorIngredientes[0] : null;
+                    const pesoBasePasteleria = primerInsumo ? (Number(primerInsumo.cantidadNeta) || 0) : 0;
+                    if (pesoBasePasteleria > 0) {
+                        document.getElementById("rec-porcentaje").value = ((item.cantidadNeta / pesoBasePasteleria) * 100).toFixed(2);
+                    } else {
+                        document.getElementById("rec-porcentaje").value = "100.00";
+                    }
+                } else {
+                    let pesoBase = parseFloat(document.getElementById("rec-peso-base").value) || 0;
+                    if (pesoBase > 0) {
+                        document.getElementById("rec-porcentaje").value = ((item.cantidadNeta / pesoBase) * 100).toFixed(2);
+                    }
+                }
+                document.getElementById("rec-select-insumo").scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            borradorIngredientes.splice(itemIndex, 1);
+            renderizarBorrador();
+        }
+
+        function quitarDelBorrador(idTemp) {
+            borradorIngredientes = borradorIngredientes.filter(b => b.idTemp !== idTemp);
+            renderizarBorrador();
+        }
+
+        function renderizarBorrador() {
+            const tbody = document.querySelector("#tbl-borrador tbody");
+            tbody.innerHTML = "";
+            costoBorradorActual = 0;
+            pesoTotalMasaActual = 0;
+
+            const categoriaActual = document.getElementById("rec-categoria").value;
+            const pesoBaseTotal = borradorIngredientes.filter(i => i.esBase).reduce((sum, i) => sum + (Number(i.cantidadNeta) || 0), 0);
+            const pesoBasePasteleria = categoriaActual === "Pastelería" && borradorIngredientes.length > 0
+                ? (Number(borradorIngredientes[0].cantidadNeta) || 0)
+                : 0;
+
+            borradorIngredientes.forEach(item => {
+                costoBorradorActual += item.costo;
+                pesoTotalMasaActual += item.cantidadNeta;
+                
+                const porcentaje = categoriaActual === "Pastelería"
+                    ? (pesoBasePasteleria > 0 ? ((item.cantidadNeta / pesoBasePasteleria) * 100) : 0)
+                    : (pesoBaseTotal > 0 ? ((item.cantidadNeta / pesoBaseTotal) * 100) : 0);
+                const porcentajeTexto = porcentaje.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 2}) + '%';
+
+                let row = tbody.insertRow();
+                
+                if (item.esBase) {
+                    row.style.backgroundColor = "#fff9c4"; 
+                    row.innerHTML = `<td><strong>${item.nombre}</strong></td>
+                                     <td><strong>${porcentajeTexto}</strong></td>
+                                     <td>${item.cantidadBruta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${item.unidad}</td>
+                                     <td>$${item.costo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                     <td>
+                                         <button class="btn-secondary" style="padding:2px 6px; margin-right:5px;" onclick="editarDeBorrador('${item.idTemp}')">Editar</button>
+                                         <button class="btn-danger" style="padding:2px 6px;" onclick="quitarDelBorrador('${item.idTemp}')">X</button>
+                                     </td>`;
+                } else {
+                    row.innerHTML = `<td>${item.nombre}</td>
+                                     <td>${porcentajeTexto}</td>
+                                     <td>${item.cantidadBruta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${item.unidad}</td>
+                                     <td>$${item.costo.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                     <td>
+                                         <button class="btn-secondary" style="padding:2px 6px; margin-right:5px;" onclick="editarDeBorrador('${item.idTemp}')">Editar</button>
+                                         <button class="btn-danger" style="padding:2px 6px;" onclick="quitarDelBorrador('${item.idTemp}')">X</button>
+                                     </td>`;
+                }
+            });
+
+            document.getElementById("lbl-borrador-total").textContent = "$" + costoBorradorActual.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            if (document.getElementById("lbl-borrador-peso")) {
+                document.getElementById("lbl-borrador-peso").textContent = pesoTotalMasaActual.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " g";
+            }
+            
+            const alertaMix = document.getElementById("alerta-mix-harinas");
+            const categoriaBorrador = categoriaActual;
+            const tipoPanActual = document.getElementById("rec-tipo-pan").value;
+            const harinasEnBorrador = borradorIngredientes.filter(i => i.esBase);
+            const pesoBaseBorrador = harinasEnBorrador.reduce((sum, h) => sum + (Number(h.cantidadNeta) || 0), 0);
+            
+            if (categoriaBorrador === "Panadería" && harinasEnBorrador.length > 0) {
+                const validacionHarina = ModuloPorcentajePanadero.validarReglasHarina(tipoPanActual, harinasEnBorrador, pesoBaseBorrador);
+                if (!validacionHarina.valido) {
+                    alertaMix.innerHTML = `⚠️ ${validacionHarina.error}`;
+                    alertaMix.style.color = "#c62828";
+                } else {
+                    alertaMix.innerHTML = `✅ Mix de harinas equilibrado (100% Base Panadera).`;
+                    alertaMix.style.color = "var(--success)";
+                }
+            } else {
+                alertaMix.innerHTML = "";
+            }
+
+            calcularPrecioVenta(); 
+        }
+
+        let avisoMargenesMostrado = false;
+
+        function calcularPrecioVenta() {
+            const factorMp = parseFloat(document.getElementById("rec-factor-mp").value) || 23.67;
+            const costoCalculado = costoBorradorActual;
+
+            if (document.getElementById("lbl-costo-calculado")) {
+                document.getElementById("lbl-costo-calculado").textContent = "$" + costoCalculado.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+
+            const mo = parseFloat(document.getElementById("rec-mo").value) || 33.38;
+            const cf = parseFloat(document.getElementById("rec-cf").value) || 12.94;
+            const utilidad = parseFloat(document.getElementById("rec-utilidad").value) || 30.01;
+
+            const porcentajeTotal = factorMp + mo + cf + utilidad;
+            const precioElaboracionTotal = porcentajeTotal > 0 ? costoCalculado / (factorMp / porcentajeTotal) : 0;
+            document.getElementById("rec-precio").value = "$" + precioElaboracionTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            const pesoPorcion = parseFloat(document.getElementById("rec-peso-porcion").value) || 0;
+            let cantPorciones = 0;
+            let pvpUnitario = 0;
+
+            if (pesoPorcion > 0 && pesoTotalMasaActual > 0) {
+                cantPorciones = pesoTotalMasaActual / pesoPorcion;
+                pvpUnitario = cantPorciones > 0 ? precioElaboracionTotal / cantPorciones : 0;
+                document.getElementById("rec-cant-porciones").value = cantPorciones.toFixed(1) + " porciones";
+                document.getElementById("rec-pvp-unitario").value = "$" + pvpUnitario.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } else {
+                document.getElementById("rec-cant-porciones").value = "0 porciones";
+                document.getElementById("rec-pvp-unitario").value = "$0.00";
+            }
+        }
+
+        function manejarPasosPreparacion(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const textarea = e.target;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const val = textarea.value;
+
+                const textoAnterior = val.substring(0, start);
+                const coincidencias = textoAnterior.match(/Paso (\d+):/gi);
+                let nextPaso = 2; 
+
+                if (coincidencias && coincidencias.length > 0) {
+                    const ultimoPaso = coincidencias[coincidencias.length - 1];
+                    const numero = parseInt(ultimoPaso.match(/\d+/)[0]);
+                    nextPaso = numero + 1;
+                } else if (textoAnterior.trim() === '') {
+                    nextPaso = 1;
+                }
+
+                const textoAInsertar = '\nPaso ' + nextPaso + ': ';
+                textarea.value = val.substring(0, start) + textoAInsertar + val.substring(end);
+                textarea.selectionStart = textarea.selectionEnd = start + textoAInsertar.length;
+            }
+        }
+
+        function guardarReceta() {
+            const nombre = document.getElementById("rec-nombre").value;
+            const categoria = document.getElementById("rec-categoria").value;
+            const tipoPan = document.getElementById("rec-tipo-pan").value;
+            const descripcion = document.getElementById("rec-descripcion").value;
+            const preparacion = document.getElementById("rec-preparacion").value;
+            let foto = document.getElementById("rec-foto-url").value;
+            
+            const amasado = parseInt(document.getElementById("rec-amasado").value) || 0;
+            const reposo = parseInt(document.getElementById("rec-reposo").value) || 0;
+            const formado = parseInt(document.getElementById("rec-formado").value) || 0;
+            const fermentacion = parseInt(document.getElementById("rec-fermentacion").value) || 0;
+            const tempHorno = parseInt(document.getElementById("rec-temphorno").value) || 0;
+            const horneado = parseInt(document.getElementById("rec-horneado").value) || 0;
+            
+            const pesoPorcion = parseFloat(document.getElementById("rec-peso-porcion").value) || 0;
+            const cantPorciones = (pesoPorcion > 0 && pesoTotalMasaActual > 0) ? (pesoTotalMasaActual / pesoPorcion) : 0;
+
+            const factorMp = parseFloat(document.getElementById("rec-factor-mp").value) || 23.67;
+            const costoCalculado = costoBorradorActual;
+
+            const mo = parseFloat(document.getElementById("rec-mo").value) || 33.38;
+            const cf = parseFloat(document.getElementById("rec-cf").value) || 12.94;
+            const utilidad = parseFloat(document.getElementById("rec-utilidad").value) || 30.01;
+
+            const porcentajeTotal = factorMp + mo + cf + utilidad;
+            const precioVenta = porcentajeTotal > 0 ? costoCalculado / (factorMp / porcentajeTotal) : 0;
+            const pvpUnitario = cantPorciones > 0 ? (precioVenta / cantPorciones) : 0;
+
+            if(!nombre || (borradorIngredientes.length === 0 && !document.getElementById("rec-tipo-harina").value)) {
+                alert("La receta requiere un nombre y al menos un ingrediente formulado.");
+                return;
+            }
+
+            let insumosAguardar = [...borradorIngredientes];
+
+            if(categoria === "Panadería") {
+                const harinasEnBorrador = borradorIngredientes.filter(i => i.esBase);
+                const pesoBaseBorrador = harinasEnBorrador.reduce((sum, h) => sum + (Number(h.cantidadNeta) || 0), 0);
+                const validacionHarina = ModuloPorcentajePanadero.validarReglasHarina(tipoPan, harinasEnBorrador, pesoBaseBorrador);
+                
+                if (!validacionHarina.valido && harinasEnBorrador.length > 0) {
+                    alert(`Para guardar en Panadería: ${validacionHarina.error}`);
+                    return;
+                }
+
+                const calculoPorcentual = ModuloPorcentajePanadero.calcularReceta({
+                    tipoPan: tipoPan,
+                    insumos: borradorIngredientes
+                });
+
+                if (calculoPorcentual.valido) {
+                    insumosAguardar = calculoPorcentual.insumos;
+                }
+            }
+
+            if(!foto) foto = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
+
+            const estructuraReceta = {
+                id: idRecetaActiva ? idRecetaActiva : Date.now().toString(),
+                nombre, categoria, tipoPan, descripcion, preparacion, fotoUrl: foto,
+                amasado, reposo, formado, fermentacion, tempHorno, horneado,
+                leudado: (reposo + fermentacion),
+                pesoPorcion, cantPorciones, pvpUnitario,
+                factorMp: factorMp, 
+                mo, cf, utilidad, precioVenta,
+                costoTotal: costoBorradorActual,
+                ingredientes: insumosAguardar,
+                pesoBase: parseFloat(document.getElementById("rec-peso-base").value) || 1000
+            };
+
+            if(idRecetaActiva) {
+                const index = db.recetas.findIndex(r => r.id === idRecetaActiva);
+                db.recetas[index] = estructuraReceta;
+            } else {
+                db.recetas.push(estructuraReceta);
+            }
+
+            actualizarCostosRecetas();
+            guardarEnLocalStorage();
+            limpiarFormularioReceta();
+            renderizarTodo();
+            
+            document.getElementById("view-admin").classList.add("hidden");
+            document.getElementById("view-catalogo").classList.remove("hidden");
+            document.getElementById("btn-to-admin").classList.remove("hidden");
+            document.getElementById("btn-to-catalog").classList.add("hidden");
+        }
+
+        function limpiarFormularioReceta() {
+            document.getElementById("rec-nombre").value = "";
+            document.getElementById("rec-categoria").value = "Panadería";
+            evaluarCategoria();
+            document.getElementById("rec-descripcion").value = "";
+            document.getElementById("rec-preparacion").value = "";
+            document.getElementById("rec-foto-url").value = "";
+            document.getElementById("rec-foto-file").value = "";
+            
+            document.getElementById("rec-amasado").value = "";
+            document.getElementById("rec-reposo").value = "";
+            document.getElementById("rec-formado").value = "";
+            document.getElementById("rec-fermentacion").value = "";
+            document.getElementById("rec-temphorno").value = "";
+            document.getElementById("rec-horneado").value = "";
+            
+            document.getElementById("rec-peso-porcion").value = "";
+            document.getElementById("rec-cant-porciones").value = "0 porciones";
+            document.getElementById("rec-pvp-unitario").value = "$0.00";
+
+            document.getElementById("rec-mo").value = "33.38";
+            document.getElementById("rec-cf").value = "12.94";
+            document.getElementById("rec-utilidad").value = "30.01";
+            document.getElementById("rec-precio").value = "$0.00";
+            document.getElementById("rec-peso-base").value = "1000";
+            document.getElementById("rec-porcentaje-harina").value = "";
+            
+            document.getElementById("rec-factor-mp").value = "23.67";
+            if(document.getElementById("lbl-costo-calculado")) document.getElementById("lbl-costo-calculado").textContent = "$0.00";
+            if(document.getElementById("lbl-borrador-peso")) document.getElementById("lbl-borrador-peso").textContent = "0.00 g";
+            
+            if (document.getElementById("rec-tipo-harina").options.length > 0) {
+                document.getElementById("rec-tipo-harina").selectedIndex = 0;
+            }
+            if (document.getElementById("rec-clasificacion-harina")) {
+                document.getElementById("rec-clasificacion-harina").selectedIndex = 0;
+            }
+            document.getElementById("rec-porcentaje").value = "";
+            borradorIngredientes = [];
+            costoBorradorActual = 0;
+            pesoTotalMasaActual = 0;
+            idRecetaActiva = null;
+            
+            document.getElementById("creador-titulo").textContent = "Crear / Editar Receta";
+            document.getElementById("btn-guardar-receta").textContent = "Guardar Receta";
+            renderizarBorrador();
+        }
+
+        function filtrarCatalogo(categoria) {
+            filtroCatalogoActual = categoria;
+            
+            document.getElementById("flt-todos").className = (categoria === 'Todos') ? "btn-primary" : "btn-secondary";
+            document.getElementById("flt-panaderia").className = (categoria === 'Panadería') ? "btn-primary" : "btn-secondary";
+            document.getElementById("flt-pasteleria").className = (categoria === 'Pastelería') ? "btn-primary" : "btn-secondary";
+            
+            renderizarCatalogo();
+        }
+
+        function renderizarCatalogo() {
+            const container = document.getElementById("catalog-container");
+            container.innerHTML = "";
+
+            let recetasFiltradas = db.recetas;
+            if (filtroCatalogoActual !== 'Todos') {
+                recetasFiltradas = db.recetas.filter(r => r.categoria === filtroCatalogoActual);
+            }
+
+            if(recetasFiltradas.length === 0) {
+                container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">No hay recetas creadas en esta categoría.</p>`;
+                return;
+            }
+
+            recetasFiltradas.forEach(receta => {
+                const categoriaLabel = receta.categoria || "Panadería";
+                const card = document.createElement("div");
+                card.className = "recipe-card";
+                card.onclick = () => solicitarAccesoReceta(receta.id);
+                card.innerHTML = `
+                    <span class="cat-badge">${categoriaLabel}</span>
+                    <img src="${receta.fotoUrl}" class="recipe-thumb" alt="${receta.nombre}">
+                    <div class="recipe-info">
+                        <h3>${receta.nombre}</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 5px 0 0 0;">${receta.descripcion || ''}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function solicitarAccesoReceta(id) {
+            idRecetaVerDetalle = id;
+            accionPendiente = 'ver_receta';
+            document.getElementById("login-pass").value = "";
+            document.getElementById("modal-login").classList.remove("hidden");
+        }
+
+        function abrirDetalleReceta(id) {
+            idRecetaVerDetalle = id;
+            const receta = db.recetas.find(r => r.id === id);
+            if (!receta) return;
+
+            document.getElementById("md-foto").src = receta.fotoUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
+            document.getElementById("md-nombre").textContent = receta.nombre;
+            document.getElementById("md-descripcion").textContent = receta.descripcion || "Sin descripción.";
+            document.getElementById("md-categoria-badge").textContent = receta.categoria || "Panadería";
+            
+            document.getElementById("md-amasado").textContent = `🥣 Amasado: ${receta.amasado || 0} min`;
+            document.getElementById("md-reposo").textContent = `🛋️ Reposo: ${receta.reposo || 0} min`;
+            document.getElementById("md-formado").textContent = `🥖 Formado: ${receta.formado || 0} min`;
+            document.getElementById("md-fermentacion").textContent = `🌾 Fermentación: ${receta.fermentacion || 0} min`;
+            document.getElementById("md-temphorno").textContent = `🌡️ Temp: ${receta.tempHorno || 0} °C`;
+            document.getElementById("md-horneado").textContent = `🔥 Horneo: ${receta.horneado || 0} min`;
+
+            const costoTotal = receta.costoTotal || 0;
+            const precioVenta = receta.precioVenta || 0;
+            const pesoPorcion = receta.pesoPorcion || 0;
+            const cantPorciones = receta.cantPorciones || 0;
+            const pvpUnitario = receta.pvpUnitario || 0;
+
+            document.getElementById("md-costo").textContent = "$" + costoTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById("md-margen-badge").textContent = `${receta.mo || 0}% / ${receta.cf || 0}% / ${receta.utilidad || 0}%`;
+            document.getElementById("md-precio").textContent = "$" + precioVenta.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById("md-porciones-badge").textContent = `${cantPorciones.toFixed(1)} und (${pesoPorcion}g)`;
+            document.getElementById("md-pvp-unitario-badge").textContent = "$" + pvpUnitario.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " / und";
+
+            document.getElementById("md-preparacion").textContent = receta.preparacion || "Sin instrucciones de preparación.";
+
+            document.getElementById("modal-detalle").classList.remove("hidden");
+        }
+
+        function cerrarModal() {
+            document.getElementById("modal-detalle").classList.add("hidden");
+        }
+
+        function solicitarModificacion(accion) {
+            accionPendiente = accion;
+            document.getElementById("login-pass").value = "";
+            document.getElementById("modal-login").classList.remove("hidden");
+        }
+
+        function prepararEdicionReceta(id) {
+            const receta = db.recetas.find(r => r.id === id);
+            if (!receta) return;
+
+            idRecetaActiva = receta.id;
+            document.getElementById("rec-nombre").value = receta.nombre || "";
+            document.getElementById("rec-categoria").value = receta.categoria || "Panadería";
+            evaluarCategoria();
+            document.getElementById("rec-tipo-pan").value = receta.tipoPan || "";
+            document.getElementById("rec-descripcion").value = receta.descripcion || "";
+            document.getElementById("rec-preparacion").value = receta.preparacion || "";
+            document.getElementById("rec-foto-url").value = receta.fotoUrl || "";
+
+            document.getElementById("rec-amasado").value = receta.amasado || "";
+            document.getElementById("rec-reposo").value = receta.reposo || "";
+            document.getElementById("rec-formado").value = receta.formado || "";
+            document.getElementById("rec-fermentacion").value = receta.fermentacion || "";
+            document.getElementById("rec-temphorno").value = receta.tempHorno || "";
+            document.getElementById("rec-horneado").value = receta.horneado || "";
+
+            document.getElementById("rec-peso-base").value = receta.pesoBase || 1000;
+            document.getElementById("rec-factor-mp").value = 23.67;
+            document.getElementById("rec-mo").value = 33.38;
+            document.getElementById("rec-cf").value = 12.94;
+            document.getElementById("rec-utilidad").value = receta.utilidad !== undefined ? receta.utilidad : 30.01;
+            document.getElementById("rec-peso-porcion").value = receta.pesoPorcion || "";
+
+            borradorIngredientes = receta.ingredientes ? JSON.parse(JSON.stringify(receta.ingredientes)) : [];
+            
+            document.getElementById("creador-titulo").textContent = "Editar Receta";
+            document.getElementById("btn-guardar-receta").textContent = "Actualizar Receta";
+
+            mostrarVista('admin');
+            cambiarPestana('recetas');
+            renderizarBorrador();
+        }
+
+        function evaluarCategoria() {
+            const cat = document.getElementById("rec-categoria").value;
+            const secTipo = document.getElementById("sec-tipo-pan");
+            if (cat === "Panadería") {
+                secTipo.style.display = "flex";
+            } else {
+                secTipo.style.display = "none";
+            }
+        }
+
+        function cargarSelectProduccion() {
+            const select = document.getElementById("prod-select-receta");
+            if (!select) return;
+            select.innerHTML = '<option value="">-- Seleccionar Receta --</option>';
+            db.recetas.forEach(rec => {
+                let opt = document.createElement("option");
+                opt.value = rec.id;
+                opt.textContent = rec.nombre;
+                select.appendChild(opt);
+            });
+        }
+
+        function cargarRecetaProduccion() {
+            const id = document.getElementById("prod-select-receta").value;
+            recetaProduccionActual = db.recetas.find(r => r.id === id);
+            
+            if (!recetaProduccionActual) {
+                document.getElementById("prod-peso-base").value = "";
+                document.getElementById("prod-gramaje-porcion").value = "";
+                document.getElementById("prod-porciones").value = "";
+                document.getElementById("prod-lbl-masa-total").textContent = "0.00 g";
+                document.getElementById("prod-lbl-costo-total").textContent = "$0.00";
+                document.querySelector("#tbl-produccion tbody").innerHTML = "";
+                return;
+            }
+
+            const pesoBaseHarinas = recetaProduccionActual.pesoBase || 1000;
+            document.getElementById("prod-peso-base").value = pesoBaseHarinas;
+            document.getElementById("prod-gramaje-porcion").value = recetaProduccionActual.pesoPorcion || 50;
+            document.getElementById("prod-porciones").value = recetaProduccionActual.cantPorciones ? recetaProduccionActual.cantPorciones.toFixed(1) : "";
+
+            calcularProduccion('base');
+        }
+
+        function calcularProduccion(origen) {
+            if (!recetaProduccionActual) return;
+
+            const harinas = recetaProduccionActual.ingredientes.filter(i => i.esBase);
+            const pesoBaseHarinasOriginal = harinas.reduce((sum, h) => sum + (h.cantidadNeta || 0), 0) || recetaProduccionActual.pesoBase || 1000;
+
+            let nuevoPesoBase = parseFloat(document.getElementById("prod-peso-base").value) || 0;
+            let gramajePorcion = parseFloat(document.getElementById("prod-gramaje-porcion").value) || 0;
+            let cantPorciones = parseFloat(document.getElementById("prod-porciones").value) || 0;
+
+            if (origen === 'porciones' && gramajePorcion > 0 && cantPorciones > 0) {
+                const masaTotalDeseada = gramajePorcion * cantPorciones;
+                const pesoMasaOriginal = recetaProduccionActual.ingredientes.reduce((sum, i) => sum + (i.cantidadNeta || 0), 0);
+                if (pesoMasaOriginal > 0) {
+                    const factorEscala = masaTotalDeseada / pesoMasaOriginal;
+                    nuevoPesoBase = pesoBaseHarinasOriginal * factorEscala;
+                    document.getElementById("prod-peso-base").value = nuevoPesoBase.toFixed(2);
+                }
+            }
+
+            const factorMultiplicador = pesoBaseHarinasOriginal > 0 ? (nuevoPesoBase / pesoBaseHarinasOriginal) : 1;
+            const tbody = document.querySelector("#tbl-produccion tbody");
+            tbody.innerHTML = "";
+
+            let masaTotalCalculada = 0;
+            let costoTotalProduccion = 0;
+
+            recetaProduccionActual.ingredientes.forEach(ing => {
+                const cantRequerida = (ing.cantidadNeta || 0) * factorMultiplicador;
+                const cantBrutaRequerida = (ing.cantidadBruta || ing.cantidadNeta || 0) * factorMultiplicador;
+                
+                let costoItem = 0;
+                if (ing.isSubReceta) {
+                    const recDep = db.recetas.find(r => r.id === ing.insumoId);
+                    const pesoSub = recDep ? recDep.ingredientes.reduce((sum, i) => sum + i.cantidadNeta, 0) : 0;
+                    const costoGramo = (recDep && pesoSub > 0) ? (recDep.costoTotal / pesoSub) : 0;
+                    costoItem = cantBrutaRequerida * costoGramo;
+                } else {
+                    const insumo = db.insumos.find(i => i.id === ing.insumoId);
+                    costoItem = cantBrutaRequerida * (insumo ? insumo.precioUnitario : 0);
+                }
+
+                masaTotalCalculada += cantRequerida;
+                costoTotalProduccion += costoItem;
+
+                const porcentajePanadero = pesoBaseHarinasOriginal > 0 ? ((ing.cantidadNeta / pesoBaseHarinasOriginal) * 100) : 0;
+
+                let row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${ing.nombre}</td>
+                    <td>${porcentajePanadero.toFixed(1)}%</td>
+                    <td>${cantRequerida.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${ing.unidad || 'g'}</td>
+                    <td>$${costoItem.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                `;
+            });
+
+            document.getElementById("prod-lbl-masa-total").textContent = masaTotalCalculada.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " g";
+            document.getElementById("prod-lbl-costo-total").textContent = "$" + costoTotalProduccion.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            if (origen === 'base' && gramajePorcion > 0) {
+                document.getElementById("prod-porciones").value = (masaTotalCalculada / gramajePorcion).toFixed(1);
+            }
+        }
+
+        function renderizarTodo() {
+            renderizarInsumos();
+            renderizarBorrador();
+            renderizarCatalogo();
+            cargarSelectProduccion();
+            evaluarCategoria();
+        }
+    </script>
+</body>
+</html>
