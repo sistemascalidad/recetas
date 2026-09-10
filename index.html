@@ -1481,23 +1481,20 @@
                                  </td>`;
                 
                 const nombreLower = ins.nombre.toLowerCase();
-                if (nombreLower.includes("harina") || nombreLower.includes("avena") || nombreLower.includes("salvado") || nombreLower.includes("prem")) {
+                const esHarina = nombreLower.includes("harina") || nombreLower.includes("avena") || nombreLower.includes("salvado") || nombreLower.includes("prem");
+
+                if (esHarina) {
                     let optHarina = document.createElement("option");
                     optHarina.value = ins.nombre;
                     optHarina.textContent = ins.nombre;
                     selectHarina.appendChild(optHarina);
-                } else {
+                }
+
+                if (document.getElementById("rec-categoria").value === "Pastelería" || !esHarina) {
                     let opt = document.createElement("option");
                     opt.value = ins.id;
                     opt.textContent = `${ins.nombre} (${ins.unidad})`;
                     select.appendChild(opt);
-                }
-
-                if (document.getElementById("rec-categoria").value === "Pastelería" && (nombreLower.includes("harina") || nombreLower.includes("avena") || nombreLower.includes("salvado") || nombreLower.includes("prem"))) {
-                    let optHarinaAdicional = document.createElement("option");
-                    optHarinaAdicional.value = ins.id;
-                    optHarinaAdicional.textContent = `${ins.nombre} (${ins.unidad})`;
-                    select.appendChild(optHarinaAdicional);
                 }
             });
 
@@ -2154,6 +2151,7 @@
             } else {
                 secTipo.style.display = "none";
             }
+            renderizarInsumos();
         }
 
         function cargarSelectProduccion() {
