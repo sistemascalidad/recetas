@@ -904,6 +904,9 @@
          */
         const STORE_KEY = "gastro_pro_db";
         const AUTO_SYNC_DATE_KEY = "gastro_auto_sync_date";
+        const GITHUB_TOKEN_KEY = "gastro_github_token";
+        let evitandoSincronizacionGitHub = false;
+        let sincronizacionGitHubPendiente = Promise.resolve();
         
         let db = {
             identidad: { nombre: "Mi Negocio", logoUrl: "", tabNombre: "", clave: "1234" },
@@ -912,6 +915,7 @@
         };
 
         let borradorIngredientes = []; 
+        let idIngredienteEditando = null;
         let costoBorradorActual = 0;
         let pesoTotalMasaActual = 0;
         let idRecetaActiva = null; 
@@ -1006,7 +1010,9 @@
                 if (!db.identidad.clave) db.identidad.clave = "1234";
                 if (db.insumos) db.insumos.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
 
+                evitandoSincronizacionGitHub = true;
                 guardarEnLocalStorage();
+                evitandoSincronizacionGitHub = false;
                 localStorage.setItem(AUTO_SYNC_DATE_KEY, respaldoMasReciente.fecha);
                 sincronizarFormulariosIdentidad();
                 renderizarTodo();
@@ -1028,6 +1034,125 @@
 
         function guardarEnLocalStorage() {
             localStorage.setItem(STORE_KEY, JSON.stringify(db));
+
+            if (!evitandoSincronizacionGitHub) {
+                sincronizacionGitHubPendiente = sincronizacionGitHubPendiente
+                    .then(() => sincronizarGuardadoEnGitHub())
+                    .catch(error => {
+                        console.warn("No fue posible sincronizar el respaldo con GitHub.", error);
+                    });
+            }
+        }
+
+        function obtenerConfiguracionGitHub() {
+            const host = window.location.hostname;
+            if (!host.endsWith('.github.io')) return null;
+
+            const rutaActual = window.location.pathname;
+            const segmentos = rutaActual.split('/').filter(Boolean);
+            const propietario = host.split('.')[0];
+            let repositorio = '';
+            let rutaDirectorio = '';
+
+            if (segmentos.length > 0) {
+                repositorio = segmentos[0];
+                rutaDirectorio = segmentos.slice(1).join('/');
+            } else {
+                repositorio = propietario + '.github.io';
+            }
+
+            return { propietario, repositorio, rutaDirectorio };
+        }
+
+        function obtenerTokenGitHub() {
+            let token = localStorage.getItem(GITHUB_TOKEN_KEY);
+            if (token) return token;
+
+            token = prompt(
+                "Para activar el guardado automático en GitHub, ingrese su token de acceso personal (PAT) con permiso de escritura sobre el contenido del repositorio.\n\nEl token se guardará únicamente en el almacenamiento local de este navegador."
+            );
+
+            if (token) {
+                token = token.trim();
+                if (token) localStorage.setItem(GITHUB_TOKEN_KEY, token);
+            }
+
+            return token || null;
+        }
+
+        function codificarContenidoBase64(texto) {
+            const bytes = new TextEncoder().encode(texto);
+            let binario = '';
+            const tamanoBloque = 0x8000;
+            for (let i = 0; i < bytes.length; i += tamanoBloque) {
+                binario += String.fromCharCode(...bytes.subarray(i, i + tamanoBloque));
+            }
+            return btoa(binario);
+        }
+
+        async function sincronizarGuardadoEnGitHub() {
+            const configuracion = obtenerConfiguracionGitHub();
+            if (!configuracion) return;
+
+            const token = obtenerTokenGitHub();
+            if (!token) return;
+
+            const fecha = new Date().toISOString().split('T')[0];
+            const nombreArchivo = `respaldo_gastro_${fecha}.json`;
+            const rutaArchivo = configuracion.rutaDirectorio
+                ? `${configuracion.rutaDirectorio}/${nombreArchivo}`
+                : nombreArchivo;
+
+            const rutaApi = rutaArchivo.split('/').map(parte => encodeURIComponent(parte)).join('/');
+            const apiUrl = `https://api.github.com/repos/${encodeURIComponent(configuracion.propietario)}/${encodeURIComponent(configuracion.repositorio)}/contents/${rutaApi}`;
+            const contenido = JSON.stringify(db, null, 2);
+
+            let sha = null;
+            const respuestaActual = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28'
+                },
+                cache: 'no-store'
+            });
+
+            if (respuestaActual.ok) {
+                const archivoActual = await respuestaActual.json();
+                sha = archivoActual.sha;
+            } else if (respuestaActual.status !== 404) {
+                throw new Error(`GitHub respondió con estado ${respuestaActual.status}.`);
+            }
+
+            const datosCommit = {
+                message: `Actualización automática del respaldo ${fecha}`,
+                content: codificarContenidoBase64(contenido)
+            };
+
+            if (sha) datosCommit.sha = sha;
+
+            const respuestaGuardar = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28'
+                },
+                body: JSON.stringify(datosCommit)
+            });
+
+            if (!respuestaGuardar.ok) {
+                if (respuestaGuardar.status === 401 || respuestaGuardar.status === 403) {
+                    localStorage.removeItem(GITHUB_TOKEN_KEY);
+                    throw new Error("El token de GitHub no tiene autorización para guardar el respaldo. Se solicitará nuevamente en el próximo guardado.");
+                }
+                throw new Error(`No se pudo guardar el respaldo en GitHub. Estado ${respuestaGuardar.status}.`);
+            }
+
+            localStorage.setItem(AUTO_SYNC_DATE_KEY, fecha);
+            console.log(`Respaldo sincronizado automáticamente en GitHub: ${rutaArchivo}`);
         }
 
         function mostrarVista(vista) {
@@ -1583,7 +1708,7 @@
                 return;
             }
 
-            let sumaActual = borradorIngredientes.filter(i => i.esBase).reduce((sum, i) => sum + (i.porcentajeBase || 100), 0);
+            let sumaActual = borradorIngredientes.filter(i => i.esBase && i.idTemp !== idIngredienteEditando).reduce((sum, i) => sum + (i.porcentajeBase || 100), 0);
             
             if (categoriaActual === "Panadería") {
                 if (sumaActual + porcentajeHarina > 100.1) {
@@ -1623,8 +1748,8 @@
 
             const costoHarina = cantCalculo * insumoHarina.precioUnitario;
 
-            borradorIngredientes.push({
-                idTemp: Date.now().toString(),
+            const ingredienteActualizado = {
+                idTemp: idIngredienteEditando || Date.now().toString(),
                 insumoId: insumoHarina.id,
                 nombre: `${insumoHarina.nombre} (${porcentajeHarina}%)`,
                 unidad: unidadMostrar,
@@ -1635,8 +1760,16 @@
                 esBase: true,
                 porcentajeBase: porcentajeHarina,
                 clasificacion: clasificacionHarina
-            });
+            };
 
+            if (idIngredienteEditando) {
+                const indexEditado = borradorIngredientes.findIndex(i => i.idTemp === idIngredienteEditando);
+                if (indexEditado !== -1) borradorIngredientes[indexEditado] = ingredienteActualizado;
+            } else {
+                borradorIngredientes.push(ingredienteActualizado);
+            }
+
+            idIngredienteEditando = null;
             document.getElementById("rec-porcentaje-harina").value = "";
             renderizarBorrador();
         }
@@ -1679,8 +1812,8 @@
             const categoriaActual = document.getElementById("rec-categoria").value;
             const esPrimerInsumoPasteleria = categoriaActual === "Pastelería" && borradorIngredientes.length === 0;
 
-            borradorIngredientes.push({
-                idTemp: Date.now().toString(),
+            const ingredienteActualizado = {
+                idTemp: idIngredienteEditando || Date.now().toString(),
                 insumoId: idOrigen,
                 nombre: nombre,
                 unidad: unidad,
@@ -1691,8 +1824,16 @@
                 esBase: false,
                 isSubReceta: esSubReceta,
                 porcentajePastelero: esPrimerInsumoPasteleria ? 100 : undefined
-            });
+            };
 
+            if (idIngredienteEditando) {
+                const indexEditado = borradorIngredientes.findIndex(i => i.idTemp === idIngredienteEditando);
+                if (indexEditado !== -1) borradorIngredientes[indexEditado] = ingredienteActualizado;
+            } else {
+                borradorIngredientes.push(ingredienteActualizado);
+            }
+
+            idIngredienteEditando = null;
             document.getElementById("rec-cant-neta").value = "";
             document.getElementById("rec-porcentaje").value = "";
             document.getElementById("rec-merma").value = "0";
@@ -1703,6 +1844,7 @@
             const itemIndex = borradorIngredientes.findIndex(b => b.idTemp === idTemp);
             if (itemIndex === -1) return;
             const item = borradorIngredientes[itemIndex];
+            idIngredienteEditando = idTemp;
 
             if (item.esBase) {
                 const insumo = db.insumos.find(i => i.id === item.insumoId);
@@ -1714,7 +1856,14 @@
                 document.getElementById("rec-peso-base").scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 let selectVal = item.isSubReceta ? `REC_${item.insumoId}` : item.insumoId;
-                document.getElementById("rec-select-insumo").value = selectVal;
+                const selectInsumo = document.getElementById("rec-select-insumo");
+                if (!Array.from(selectInsumo.options).some(option => option.value === selectVal)) {
+                    const option = document.createElement("option");
+                    option.value = selectVal;
+                    option.textContent = item.isSubReceta ? item.nombre : `${item.nombre} (${item.unidad})`;
+                    selectInsumo.appendChild(option);
+                }
+                selectInsumo.value = selectVal;
                 document.getElementById("rec-cant-neta").value = item.cantidadNeta;
                 document.getElementById("rec-merma").value = item.merma || 0;
                 
@@ -1736,7 +1885,6 @@
                 document.getElementById("rec-select-insumo").scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
-            borradorIngredientes.splice(itemIndex, 1);
             renderizarBorrador();
         }
 
@@ -2005,6 +2153,7 @@
             }
             document.getElementById("rec-porcentaje").value = "";
             borradorIngredientes = [];
+            idIngredienteEditando = null;
             costoBorradorActual = 0;
             pesoTotalMasaActual = 0;
             idRecetaActiva = null;
